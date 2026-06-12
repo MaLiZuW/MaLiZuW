@@ -246,78 +246,14 @@
   .modal-overlay.open { display: flex; }
   .modal {
     background: var(--bg2); border: 1px solid var(--border2);
-    border-radius: var(--radius); width: 100%; max-width: 520px;
-    max-height: 92vh; overflow-y: auto; padding: 22px;
+    border-radius: var(--radius); width: 100%; max-width: 580px;
+    max-height: 90vh; overflow-y: auto; padding: 22px;
   }
-  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
   .modal-header h3 { font-size: 16px; font-weight: 600; }
   .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; padding: 2px 6px; }
   .modal-close:hover { color: var(--text); }
   .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
-
-  /* WIZARD STEPS */
-  .wiz-steps {
-    display: flex; gap: 6px; margin-bottom: 20px;
-  }
-  .wiz-step {
-    flex: 1; text-align: center; font-size: 11px; padding: 6px 4px;
-    border-radius: 20px; border: 1px solid var(--border2);
-    color: var(--text3); background: var(--bg3); transition: all 0.2s;
-    line-height: 1.3;
-  }
-  .wiz-step.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent2); font-weight: 600; }
-  .wiz-step.done { background: rgba(77,184,122,0.12); border-color: #4db87a55; color: #4db87a; }
-  .wiz-panel { display: none; }
-  .wiz-panel.active { display: block; }
-
-  /* CALENDAR WIDGET */
-  .cal-wrap { user-select: none; }
-  .cal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .cal-title { font-size: 15px; font-weight: 600; color: var(--text); }
-  .cal-nav { background: none; border: 1px solid var(--border2); color: var(--text2);
-    width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 15px;
-    display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-  .cal-nav:hover { background: var(--bg3); color: var(--text); }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .cal-dow { font-size: 10px; color: var(--text3); text-align: center; padding: 4px 0; font-weight: 500; letter-spacing: 0.3px; }
-  .cal-day {
-    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-    font-size: 13px; border-radius: 8px; cursor: pointer; color: var(--text2);
-    transition: all 0.12s; border: 1px solid transparent;
-  }
-  .cal-day:hover { background: var(--bg3); color: var(--text); }
-  .cal-day.other-month { color: var(--text3); opacity: 0.4; }
-  .cal-day.today { border-color: var(--accent); color: var(--accent2); }
-  .cal-day.selected { background: var(--accent); color: white; border-color: transparent; font-weight: 600; }
-  .cal-day.future { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
-  .cal-day.has-entry::after {
-    content: ''; display: block; width: 4px; height: 4px;
-    border-radius: 50%; background: var(--accent2); opacity: 0.7;
-    position: absolute; bottom: 3px;
-  }
-  .cal-day { position: relative; }
-
-  /* TIME ROW */
-  .time-row {
-    display: flex; gap: 10px; align-items: center; margin-top: 16px;
-    background: var(--bg3); border-radius: var(--radius-sm); padding: 10px 12px;
-  }
-  .time-row label { font-size: 12px; color: var(--text2); white-space: nowrap; }
-  .time-row input {
-    background: var(--bg4); border: 1px solid var(--border2); color: var(--text);
-    border-radius: 6px; padding: 5px 8px; font-size: 14px; font-weight: 500;
-    font-family: monospace; flex: 1;
-  }
-  .time-row input:focus { outline: none; border-color: var(--accent); }
-
-  .selected-date-badge {
-    margin-top: 12px; padding: 8px 12px; background: var(--accent-bg);
-    border: 1px solid var(--accent); border-radius: var(--radius-sm);
-    font-size: 13px; color: var(--accent2); text-align: center; font-weight: 500;
-  }
 
   /* HEAT LEGEND */
   .heat-legend {
@@ -742,7 +678,7 @@
   </div>
 </nav>
 
-<!-- ADD/EDIT MODAL — wizard -->
+<!-- ADD/EDIT MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
@@ -750,107 +686,53 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
 
-    <!-- Step indicators -->
-    <div class="wiz-steps" id="wiz-steps">
-      <div class="wiz-step active" id="wiz-s1">📅 Dátum</div>
-      <div class="wiz-step" id="wiz-s2">🧠 Zóna</div>
-      <div class="wiz-step" id="wiz-s3">⚡ Bolesť</div>
-      <div class="wiz-step" id="wiz-s4">📝 Detail</div>
-    </div>
-
-    <!-- PANEL 1: Date + time calendar -->
-    <div class="wiz-panel active" id="wiz-p1">
-      <div class="cal-wrap">
-        <div class="cal-header">
-          <button class="cal-nav" onclick="calPrev()">‹</button>
-          <div class="cal-title" id="cal-title"></div>
-          <button class="cal-nav" onclick="calNext()">›</button>
-        </div>
-        <div class="cal-grid" id="cal-grid">
-          <div class="cal-dow">Po</div><div class="cal-dow">Ut</div><div class="cal-dow">St</div>
-          <div class="cal-dow">Št</div><div class="cal-dow">Pi</div><div class="cal-dow">So</div><div class="cal-dow">Ne</div>
-        </div>
-        <div class="time-row">
-          <label>⏰ Čas:</label>
-          <input type="time" id="f-time" value="12:00">
-        </div>
-        <div class="selected-date-badge" id="cal-selected-badge" style="display:none"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closeModal()">Zrušiť</button>
-        <button class="btn btn-primary" onclick="wizGo(2)">Ďalej →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 2: Head zone map (reuses picker internals inline) -->
-    <div class="wiz-panel" id="wiz-p2">
-      <div class="head-3d-wrap">
-        <div class="view-tabs">
-          <div class="view-tab active" id="wvtab-front" onclick="wizSwitchView(this,'front')">Predok</div>
-          <div class="view-tab" id="wvtab-back" onclick="wizSwitchView(this,'back')">Zadok</div>
-          <div class="view-tab" id="wvtab-whole" onclick="wizSelectWhole()">Celá hlava</div>
-        </div>
-        <div class="rotate-hint">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 1 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-          Klikni na zónu pre výber
-        </div>
-        <div class="head-canvas-area" id="wiz-head-canvas-area">
-          <svg id="wiz-head-svg" viewBox="0 0 200 270" xmlns="http://www.w3.org/2000/svg" style="width:240px;height:300px"></svg>
-        </div>
-        <div style="font-size:12px;color:var(--text2)">Vybrané zóny:</div>
-        <div class="selected-zones-preview" id="wiz-zones-preview"></div>
-      </div>
-      <!-- Hidden zone chips for saveEntry() compatibility -->
-      <div class="zone-chips" id="zone-chips-form" style="display:none"></div>
-      <div class="modal-footer">
-        <button class="btn" onclick="wizGo(1)">← Späť</button>
-        <button class="btn btn-primary" onclick="wizGo(3)">Ďalej →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 3: Pain type + intensity -->
-    <div class="wiz-panel" id="wiz-p3">
+    <div class="grid-2">
       <div class="form-row">
-        <label>Typ bolesti (môžeš vybrať viac)</label>
-        <div class="chips" id="type-chips"></div>
+        <label>Dátum a čas</label>
+        <input type="datetime-local" id="f-datetime">
       </div>
-      <div class="form-row" style="margin-top:16px">
-        <label>Intenzita bolesti: <span id="intensity-val">5</span>/10</label>
-        <div class="intensity-display">
-          <input type="range" min="1" max="10" value="5" id="f-intensity" oninput="updateIntensityBadge(this.value)">
-          <div class="intensity-badge" id="intensity-badge">5</div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="wizGo(2)">← Späť</button>
-        <button class="btn btn-primary" onclick="wizGo(4)">Ďalej →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 4: Details (trigger, notes, duration) -->
-    <div class="wiz-panel" id="wiz-p4">
       <div class="form-row">
-        <label>Trvanie (minúty, nepovinné)</label>
+        <label>Trvanie (minúty)</label>
         <input type="number" id="f-duration" min="1" max="10000" placeholder="napr. 120">
       </div>
-      <div class="form-row">
-        <label>Spúšťač / trigger (nepovinné)</label>
-        <input type="text" id="f-trigger" placeholder="napr. stres, málo spánku, alkohol...">
-      </div>
-      <div class="form-row">
-        <label>Poznámka / opis pocitu</label>
-        <textarea id="f-notes" placeholder="Vlastný opis bolesti, sprevádzajúce príznaky..."></textarea>
-      </div>
-      <!-- Summary -->
-      <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--text2);margin-top:4px" id="wiz-summary"></div>
-      <!-- hidden datetime field for saveEntry() -->
-      <input type="hidden" id="f-datetime">
-      <div class="modal-footer">
-        <button class="btn" onclick="wizGo(3)">← Späť</button>
-        <button class="btn btn-primary" onclick="saveEntry()">✓ Uložiť</button>
+    </div>
+
+    <div class="form-row">
+      <label>Intenzita bolesti: <span id="intensity-val">5</span>/10</label>
+      <div class="intensity-display">
+        <input type="range" min="1" max="10" value="5" id="f-intensity" oninput="updateIntensityBadge(this.value)">
+        <div class="intensity-badge" id="intensity-badge">5</div>
       </div>
     </div>
 
+    <div class="form-row">
+      <label>Typ bolesti (môžeš vybrať viac)</label>
+      <div class="chips" id="type-chips"></div>
+    </div>
+
+    <div class="form-row">
+      <label>Anatomické zóny bolesti (môžeš vybrať viac)</label>
+      <button type="button" class="btn" style="width:100%;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px dashed var(--accent);color:var(--accent2);background:var(--accent-bg)" onclick="openHeadPicker()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8M9 19h6"/></svg>
+        Vybrať zóny na mape hlavy
+      </button>
+      <div class="zone-chips" id="zone-chips-form"></div>
+    </div>
+
+    <div class="form-row">
+      <label>Spúšťač / trigger (nepovinné)</label>
+      <input type="text" id="f-trigger" placeholder="napr. stres, málo spánku, alkohol...">
+    </div>
+
+    <div class="form-row">
+      <label>Poznámka / opis pocitu</label>
+      <textarea id="f-notes" placeholder="Vlastný opis bolesti, sprevádzajúce príznaky..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Zrušiť</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Uložiť</button>
+    </div>
   </div>
 </div>
 
@@ -1026,42 +908,23 @@ function setPeriodBtnActive(clicked, container) {
 }
 
 // ============================================================
-// WIZARD MODAL
+// MODAL
 // ============================================================
-let wizCurrentStep = 1;
-let wizView = 'front';
-let wizSelectedZones = [];
-const DAYS_SK = ['Po','Ut','St','Št','Pi','So','Ne'];
-let calYear, calMonth, calSelectedDate;
-
 function openAddModal(id = null) {
   editingId = id;
   const entry = id ? entries.find(e => e.id === id) : null;
   document.getElementById('modal-title').textContent = id ? 'Upraviť záznam' : 'Nový záznam';
 
-  // Init calendar to current or entry month
-  const refDate = entry ? new Date(entry.datetime) : new Date();
-  calYear = refDate.getFullYear();
-  calMonth = refDate.getMonth();
-  calSelectedDate = entry
-    ? entry.datetime.slice(0,10)
-    : new Date().toISOString().slice(0,10);
-
-  // Time
-  const refTime = entry ? entry.datetime.slice(11,16) : new Date().toTimeString().slice(0,5);
-  document.getElementById('f-time').value = refTime;
-
-  // Duration, trigger, notes
-  document.getElementById('f-duration').value = entry ? (entry.duration || '') : '';
+  const now = new Date();
+  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('f-datetime').value = entry ? entry.datetime.slice(0,16) : local;
+  document.getElementById('f-duration').value = entry ? entry.duration : '';
+  document.getElementById('f-intensity').value = entry ? entry.intensity : 5;
   document.getElementById('f-trigger').value = entry ? (entry.trigger || '') : '';
   document.getElementById('f-notes').value = entry ? (entry.notes || '') : '';
+  updateIntensityBadge(entry ? entry.intensity : 5);
 
-  // Intensity
-  const iv = entry ? entry.intensity : 5;
-  document.getElementById('f-intensity').value = iv;
-  updateIntensityBadge(iv);
-
-  // Type chips
+  // type chips
   const tc = document.getElementById('type-chips');
   tc.innerHTML = '';
   getAllTypes().forEach(t => {
@@ -1072,278 +935,38 @@ function openAddModal(id = null) {
     tc.appendChild(ch);
   });
 
-  // Zones
-  wizSelectedZones = entry ? [...entry.zones] : [];
-
-  // Rebuild hidden zone-chips-form for saveEntry compatibility
+  // zone chips
   const zc = document.getElementById('zone-chips-form');
   zc.innerHTML = '';
   ZONES.forEach(z => {
     const ch = document.createElement('div');
-    ch.className = 'zone-chip' + (wizSelectedZones.includes(z.id) ? ' selected' : '');
+    ch.className = 'zone-chip' + (entry && entry.zones.includes(z.id) ? ' selected' : '');
+    ch.textContent = z.label;
     ch.dataset.id = z.id;
+    ch.style.backgroundColor = entry && entry.zones.includes(z.id) ? z.color + '33' : '';
+    ch.style.borderColor = entry && entry.zones.includes(z.id) ? z.color : '';
+    ch.style.color = entry && entry.zones.includes(z.id) ? z.color : '';
+    ch.onclick = () => {
+      ch.classList.toggle('selected');
+      if (ch.classList.contains('selected')) {
+        ch.style.backgroundColor = z.color + '33';
+        ch.style.borderColor = z.color;
+        ch.style.color = z.color;
+      } else {
+        ch.style.backgroundColor = '';
+        ch.style.borderColor = '';
+        ch.style.color = '';
+      }
+    };
     zc.appendChild(ch);
   });
 
-  // Go to step 1 (unless editing — go straight to step 1 still for simplicity)
-  wizGo(1);
   document.getElementById('modal-overlay').classList.add('open');
-  renderCalendar();
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   editingId = null;
-}
-
-function wizGo(n) {
-  wizCurrentStep = n;
-  [1,2,3,4].forEach(i => {
-    document.getElementById('wiz-p'+i).classList.toggle('active', i===n);
-    const s = document.getElementById('wiz-s'+i);
-    s.classList.remove('active','done');
-    if (i < n) s.classList.add('done');
-    else if (i === n) s.classList.add('active');
-  });
-  if (n === 2) {
-    wizView = 'front';
-    document.querySelectorAll('#wiz-p2 .view-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('wvtab-front').classList.add('active');
-    drawWizHead();
-    renderWizZonesPreview();
-    syncWvtabWhole();
-  }
-  if (n === 4) renderWizSummary();
-}
-
-// ---- Calendar ----
-function renderCalendar() {
-  const title = document.getElementById('cal-title');
-  const months = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
-  title.textContent = months[calMonth] + ' ' + calYear;
-
-  // Remove existing day cells (keep the 7 dow headers)
-  const container = document.getElementById('cal-grid');
-  const existing = container.querySelectorAll('.cal-day');
-  existing.forEach(el => el.remove());
-
-  const firstDay = new Date(calYear, calMonth, 1);
-  // Monday=0 offset
-  let startDow = (firstDay.getDay() + 6) % 7;
-  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
-  const daysInPrev = new Date(calYear, calMonth, 0).getDate();
-  const todayStr = new Date().toISOString().slice(0,10);
-
-  // Entry dates for dots
-  const entryDates = new Set(entries.map(e => e.datetime.slice(0,10)));
-
-  // Prev month filler
-  for (let i = 0; i < startDow; i++) {
-    const d = daysInPrev - startDow + 1 + i;
-    addCalDay(container, d, null, ['other-month']);
-  }
-
-  // Current month
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const cls = [];
-    if (dateStr === todayStr) cls.push('today');
-    if (dateStr === calSelectedDate) cls.push('selected');
-    if (dateStr > todayStr) cls.push('future');
-    if (entryDates.has(dateStr)) cls.push('has-entry');
-    addCalDay(container, d, dateStr, cls);
-  }
-
-  // Next month filler
-  const total = startDow + daysInMonth;
-  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
-  for (let i = 1; i <= remaining; i++) {
-    addCalDay(container, i, null, ['other-month']);
-  }
-
-  updateCalBadge();
-}
-
-function addCalDay(container, label, dateStr, classes) {
-  const el = document.createElement('div');
-  el.className = 'cal-day ' + classes.join(' ');
-  el.textContent = label;
-  if (dateStr && !classes.includes('other-month') && !classes.includes('future')) {
-    el.onclick = () => selectCalDay(dateStr);
-  }
-  container.appendChild(el);
-}
-
-function selectCalDay(dateStr) {
-  calSelectedDate = dateStr;
-  renderCalendar();
-}
-
-function updateCalBadge() {
-  const badge = document.getElementById('cal-selected-badge');
-  if (calSelectedDate) {
-    const [y,m,d] = calSelectedDate.split('-');
-    const months = ['január','február','marec','apríl','máj','jún','júl','august','september','október','november','december'];
-    badge.textContent = `✓ Vybraný dátum: ${parseInt(d)}. ${months[parseInt(m)-1]} ${y}`;
-    badge.style.display = '';
-  } else {
-    badge.style.display = 'none';
-  }
-}
-
-function calPrev() {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderCalendar();
-}
-function calNext() {
-  const now = new Date();
-  if (calYear > now.getFullYear() || (calYear === now.getFullYear() && calMonth >= now.getMonth())) return;
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderCalendar();
-}
-
-// ---- Wizard Head Map ----
-function wizSwitchView(tab, view) {
-  wizView = view;
-  document.querySelectorAll('#wiz-p2 .view-tab').forEach(t => t.classList.remove('active'));
-  if (tab) tab.classList.add('active');
-  drawWizHead();
-}
-
-function wizSelectWhole() {
-  const idx = wizSelectedZones.indexOf('whole');
-  if (idx >= 0) wizSelectedZones.splice(idx,1);
-  else wizSelectedZones = ['whole'];
-  drawWizHead();
-  renderWizZonesPreview();
-  syncWvtabWhole();
-}
-
-function syncWvtabWhole() {
-  const t = document.getElementById('wvtab-whole');
-  t.classList.toggle('active', wizSelectedZones.includes('whole'));
-}
-
-function renderWizZonesPreview() {
-  const el = document.getElementById('wiz-zones-preview');
-  if (wizSelectedZones.length === 0) {
-    el.innerHTML = '<span style="font-size:12px;color:var(--text3)">Žiadna zóna nevybraná</span>';
-    return;
-  }
-  el.innerHTML = wizSelectedZones.map(id => {
-    const z = ZONES.find(z2 => z2.id === id);
-    if (!z) return '';
-    return `<span class="sel-zone-tag" style="background:${z.color}22;border:1px solid ${z.color}55;color:${z.color}" onclick="wizRemoveZone('${id}')">
-      ${z.label} <span style="opacity:0.6">✕</span>
-    </span>`;
-  }).join('');
-  // sync hidden chips
-  syncWizZoneChips();
-}
-
-function wizRemoveZone(id) {
-  wizSelectedZones = wizSelectedZones.filter(z => z !== id);
-  drawWizHead();
-  renderWizZonesPreview();
-  syncWvtabWhole();
-}
-
-function syncWizZoneChips() {
-  document.querySelectorAll('#zone-chips-form .zone-chip').forEach(ch => {
-    const isSel = wizSelectedZones.includes(ch.dataset.id);
-    ch.classList.toggle('selected', isSel);
-  });
-}
-
-function drawWizHead() {
-  const svg = document.getElementById('wiz-head-svg');
-  svg.innerHTML = '';
-  const ns = 'http://www.w3.org/2000/svg';
-  function e(tag, attrs) {
-    const el = document.createElementNS(ns, tag);
-    Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
-    return el;
-  }
-  const headFill = '#1a2030';
-  const stroke = '#3a4560';
-  const isFront = wizView === 'front';
-
-  svg.appendChild(e('ellipse', { cx:100, cy:105, rx:70, ry:85, fill:headFill, stroke, 'stroke-width':'1.5' }));
-  svg.appendChild(e('rect', { x:82, y:190, width:36, height:42, rx:8, fill:headFill, stroke, 'stroke-width':'1.5' }));
-  svg.appendChild(e('path', { d:'M 52 230 Q 100 245 148 230', fill:'none', stroke, 'stroke-width':'1.5' }));
-  svg.appendChild(e('ellipse', { cx:26, cy:117, rx:9, ry:15, fill:headFill, stroke, 'stroke-width':'1' }));
-  svg.appendChild(e('ellipse', { cx:174, cy:117, rx:9, ry:15, fill:headFill, stroke, 'stroke-width':'1' }));
-
-  if (wizSelectedZones.includes('whole')) {
-    svg.appendChild(e('ellipse', { cx:100, cy:112, rx:70, ry:85, fill:'#9ba3b833', stroke:'#9ba3b8', 'stroke-width':'2', 'stroke-dasharray':'5,3' }));
-  }
-
-  const zoneShapes = [];
-  if (isFront) {
-    zoneShapes.push({ id:'forehead', shape:'ellipse', attrs:{ cx:100, cy:60, rx:54, ry:32 } });
-    zoneShapes.push({ id:'temple_l', shape:'ellipse', attrs:{ cx:38, cy:100, rx:23, ry:30 } });
-    zoneShapes.push({ id:'temple_r', shape:'ellipse', attrs:{ cx:162, cy:100, rx:23, ry:30 } });
-    zoneShapes.push({ id:'eye_l', shape:'ellipse', attrs:{ cx:75, cy:118, rx:21, ry:14 } });
-    zoneShapes.push({ id:'eye_r', shape:'ellipse', attrs:{ cx:125, cy:118, rx:21, ry:14 } });
-    zoneShapes.push({ id:'sinus', shape:'ellipse', attrs:{ cx:100, cy:143, rx:16, ry:21 } });
-    zoneShapes.push({ id:'jaw_l', shape:'ellipse', attrs:{ cx:67, cy:174, rx:23, ry:16 } });
-    zoneShapes.push({ id:'jaw_r', shape:'ellipse', attrs:{ cx:133, cy:174, rx:23, ry:16 } });
-  } else {
-    zoneShapes.push({ id:'crown', shape:'ellipse', attrs:{ cx:100, cy:48, rx:57, ry:40 } });
-    zoneShapes.push({ id:'occiput', shape:'ellipse', attrs:{ cx:100, cy:132, rx:57, ry:50 } });
-    zoneShapes.push({ id:'neck_l', shape:'ellipse', attrs:{ cx:74, cy:198, rx:19, ry:21 } });
-    zoneShapes.push({ id:'neck_r', shape:'ellipse', attrs:{ cx:126, cy:198, rx:19, ry:21 } });
-  }
-
-  zoneShapes.forEach(({ id, shape, attrs }) => {
-    const zone = ZONES.find(z => z.id === id);
-    if (!zone) return;
-    const isSel = wizSelectedZones.includes(id);
-    const fill = isSel ? zone.color + '55' : zone.color + '20';
-    const strokeC = zone.color;
-    const sw = isSel ? '2.5' : '1';
-    const el = e(shape, { ...attrs, fill, stroke: strokeC, 'stroke-width': sw, 'class': 'mapzone' + (isSel ? ' sel' : '') });
-    el.style.cursor = 'pointer';
-    el.addEventListener('mouseenter', function() {
-      if (!wizSelectedZones.includes(id)) this.setAttribute('fill', zone.color + '40');
-    });
-    el.addEventListener('mouseleave', function() {
-      if (!wizSelectedZones.includes(id)) this.setAttribute('fill', zone.color + '20');
-    });
-    el.addEventListener('click', () => {
-      const wi = wizSelectedZones.indexOf('whole');
-      if (wi >= 0) wizSelectedZones.splice(wi,1);
-      const idx2 = wizSelectedZones.indexOf(id);
-      if (idx2 >= 0) wizSelectedZones.splice(idx2,1);
-      else wizSelectedZones.push(id);
-      drawWizHead();
-      renderWizZonesPreview();
-      syncWvtabWhole();
-    });
-    const lbl = e('text', { x: attrs.cx, y: attrs.cy, 'text-anchor':'middle', 'dominant-baseline':'middle',
-      fill: isSel ? '#fff' : '#ffffffaa', 'font-size':'7.5', 'font-weight': isSel?'600':'400', 'pointer-events':'none' });
-    lbl.textContent = zone.label;
-    svg.appendChild(el);
-    svg.appendChild(lbl);
-  });
-}
-
-// ---- Wizard summary ----
-function renderWizSummary() {
-  const zoneLabels = wizSelectedZones.map(id => ZONES.find(z=>z.id===id)?.label || id);
-  const intensity = document.getElementById('f-intensity').value;
-  const types = [...document.querySelectorAll('#type-chips .chip.selected')].map(c=>c.textContent);
-  let html = '<div style="margin-bottom:6px;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Súhrn záznamu</div>';
-  const dateTime = calSelectedDate + 'T' + (document.getElementById('f-time').value || '00:00');
-  const [y,m,d] = calSelectedDate.split('-');
-  const months = ['január','február','marec','apríl','máj','jún','júl','august','september','október','november','december'];
-  html += `<div><span style="color:var(--text3);font-size:11px">Dátum:</span> ${parseInt(d)}. ${months[parseInt(m)-1]} ${y}, ${document.getElementById('f-time').value}</div>`;
-  if (zoneLabels.length) html += `<div style="margin-top:4px"><span style="color:var(--text3);font-size:11px">Zóny:</span> ${zoneLabels.join(', ')}</div>`;
-  if (types.length) html += `<div style="margin-top:4px"><span style="color:var(--text3);font-size:11px">Typy:</span> ${types.join(', ')}</div>`;
-  html += `<div style="margin-top:4px"><span style="color:var(--text3);font-size:11px">Intenzita:</span> <strong>${intensity}/10</strong></div>`;
-  document.getElementById('wiz-summary').innerHTML = html;
 }
 
 function updateIntensityBadge(v) {
@@ -1357,17 +980,14 @@ function updateIntensityBadge(v) {
 }
 
 function saveEntry() {
-  const timeVal = document.getElementById('f-time').value || '00:00';
-  if (!calSelectedDate) { alert('Vyber dátum'); wizGo(1); return; }
-  const datetime = calSelectedDate + 'T' + timeVal + ':00';
-  document.getElementById('f-datetime').value = datetime;
-
+  const datetime = document.getElementById('f-datetime').value;
+  if (!datetime) { alert('Zadaj dátum a čas'); return; }
   const intensity = parseInt(document.getElementById('f-intensity').value);
   const duration = parseInt(document.getElementById('f-duration').value) || null;
   const trigger = document.getElementById('f-trigger').value.trim();
   const notes = document.getElementById('f-notes').value.trim();
   const types = [...document.querySelectorAll('#type-chips .chip.selected')].map(c => c.textContent);
-  const zones = wizSelectedZones.slice();
+  const zones = [...document.querySelectorAll('#zone-chips-form .zone-chip.selected')].map(c => c.dataset.id);
 
   if (editingId) {
     const idx = entries.findIndex(e => e.id === editingId);
