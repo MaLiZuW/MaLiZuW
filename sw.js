@@ -1,5 +1,5 @@
 // CephaloLog Service Worker v1.0
-const CACHE_NAME = 'cephalolog-v1';
+const CACHE_NAME = 'cephalolog-v2';
 const ASSETS = [
   './headache-tracker.html',
   './manifest.json',
