@@ -1,4 +1,4 @@
-// CephaloLog Service Worker v1.0
+// CephaloLog Service Worker v3.0
 const CACHE_NAME = 'cephalolog-v3';
 const ASSETS = [
   './headache-tracker.html',
