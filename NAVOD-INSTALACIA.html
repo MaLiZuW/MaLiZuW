@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CephaloLog – Inštalácia na Android</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e8eaf0; padding: 24px 20px; max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 22px; color: #a897f5; margin-bottom: 6px; }
+  .sub { color: #6b7490; font-size: 14px; margin-bottom: 32px; }
+  .step { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+  .num { width: 36px; height: 36px; border-radius: 50%; background: rgba(124,111,205,0.2); border: 1px solid #7c6fcd; color: #a897f5; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+  .step-body h3 { font-size: 15px; margin-bottom: 4px; }
+  .step-body p { font-size: 13px; color: #9ba3b8; line-height: 1.6; }
+  .step-body code { background: #1e2535; border: 1px solid #2d3650; padding: 2px 7px; border-radius: 5px; font-size: 12px; color: #a897f5; }
+  .tip { background: rgba(77,184,122,0.1); border: 1px solid rgba(77,184,122,0.3); border-radius: 10px; padding: 14px 16px; margin: 24px 0; font-size: 13px; color: #4db87a; line-height: 1.6; }
+  .warn { background: rgba(224,138,58,0.1); border: 1px solid rgba(224,138,58,0.3); border-radius: 10px; padding: 14px 16px; margin: 24px 0; font-size: 13px; color: #e08a3a; line-height: 1.6; }
+  .divider { border: none; border-top: 1px solid #1e2535; margin: 28px 0; }
+  h2 { font-size: 16px; color: #a897f5; margin-bottom: 16px; }
+  .option { background: #161b27; border: 1px solid #252d40; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .option h3 { font-size: 14px; margin-bottom: 6px; }
+  .option p { font-size: 13px; color: #9ba3b8; line-height: 1.6; }
+  a { color: #a897f5; }
+</style>
+</head>
+<body>
+
+<h1>🧠 CephaloLog – Inštalácia na Android</h1>
+<p class="sub">Ako nainštalovať aplikáciu na telefón cez GitHub Pages (zadarmo)</p>
+
+<hr class="divider">
+<h2>Čo budeš potrebovať</h2>
+<ul style="font-size:13px;color:#9ba3b8;line-height:2;padding-left:18px;margin-bottom:16px">
+  <li>Účet na <strong style="color:#e8eaf0">GitHub</strong> (zadarmo – <a href="https://github.com">github.com</a>)</li>
+  <li>Súbory z tohto balíka: <code>headache-tracker.html</code>, <code>manifest.json</code>, <code>sw.js</code>, <code>icon-192.png</code>, <code>icon-512.png</code></li>
+  <li>Chrome na Androide</li>
+</ul>
+
+<hr class="divider">
+<h2>Postup krok za krokom</h2>
+
+<div class="step">
+  <div class="num">1</div>
+  <div class="step-body">
+    <h3>Vytvor nový GitHub repozitár</h3>
+    <p>Prihlás sa na <a href="https://github.com">github.com</a> → klikni <strong>+</strong> → <strong>New repository</strong>. Názov napr. <code>cephalolog</code>, nastav na <strong>Public</strong>, klikni <strong>Create repository</strong>.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">2</div>
+  <div class="step-body">
+    <h3>Nahraj všetky súbory</h3>
+    <p>V novom repozitári klikni <strong>uploading an existing file</strong> a nahraj všetkých 5 súborov naraz: <code>headache-tracker.html</code>, <code>manifest.json</code>, <code>sw.js</code>, <code>icon-192.png</code>, <code>icon-512.png</code>. Klikni <strong>Commit changes</strong>.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">3</div>
+  <div class="step-body">
+    <h3>Zapni GitHub Pages</h3>
+    <p>Choď do <strong>Settings</strong> → <strong>Pages</strong> (v ľavom menu). Pod <em>Source</em> vyber <strong>Deploy from a branch</strong>, branch <strong>main</strong>, priečinok <strong>/ (root)</strong>. Klikni <strong>Save</strong>.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">4</div>
+  <div class="step-body">
+    <h3>Počkaj minútku a skopíruj link</h3>
+    <p>Po chvíli sa zobrazí zelený banner s URL v tvare:<br><code>https://tvoje-meno.github.io/cephalolog/headache-tracker.html</code><br>Skopíruj si ho.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">5</div>
+  <div class="step-body">
+    <h3>Otvor link v Chrome na Androide</h3>
+    <p>Na telefóne otvor Chrome a zadaj skopírovanú URL. Nechaj stránku načítať.</p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="num">6</div>
+  <div class="step-body">
+    <h3>Nainštaluj aplikáciu</h3>
+    <p>Chrome automaticky zobrazí banner <strong>„Pridať CephaloLog na plochu"</strong> – klikni naň. Alebo: menu Chrome (tri bodky) → <strong>Pridať na plochu</strong> → <strong>Inštalovať</strong>.</p>
+  </div>
+</div>
+
+<div class="tip">
+  ✅ <strong>Hotovo!</strong> Na ploche sa objaví ikona CephaloLog. Aplikácia sa otvára na celú obrazovku bez lišty prehliadača, funguje offline a dáta sú uložené lokálne v telefóne.
+</div>
+
+<div class="warn">
+  ⚠️ <strong>Dôležité:</strong> Dáta sú uložené v <em>localStorage</em> prehliadača. Pravidelne exportuj zálohu cez <strong>Nastavenia → Exportovať dáta (JSON)</strong> a ulož si ju.
+</div>
+
+<hr class="divider">
+<h2>Alternatívne možnosti hostingu</h2>
+
+<div class="option">
+  <h3>Netlify Drop (najrýchlejšie)</h3>
+  <p>Choď na <a href="https://app.netlify.com/drop">app.netlify.com/drop</a> a pretiahni priečinok so všetkými 5 súbormi. Za 30 sekúnd máš link. Nevyžaduje registráciu.</p>
+</div>
+
+<div class="option">
+  <h3>Vercel</h3>
+  <p>Podobné ako Netlify. Registruj sa na <a href="https://vercel.com">vercel.com</a>, nahraj súbory a dostaneš link.</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CephaloLog">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sledovanie bolesti hlavy</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2535;
+    --bg4: #252d40;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8eaf0;
+    --text2: #9ba3b8;
+    --text3: #6b7490;
+    --accent: #7c6fcd;
+    --accent2: #a897f5;
+    --accent-bg: rgba(124,111,205,0.15);
+    --red: #e05555;
+    --orange: #e08a3a;
+    --yellow: #d4b84a;
+    --green: #4db87a;
+    --teal: #3db8a0;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo h1 { font-size: 15px; font-weight: 600; color: var(--accent2); letter-spacing: -0.2px; }
+  .sidebar-logo p { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .nav { padding: 12px 10px; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: var(--radius-sm);
+    cursor: pointer; color: var(--text2); font-size: 13px;
+    transition: all 0.15s; margin-bottom: 2px;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--accent-bg); color: var(--accent2); font-weight: 500; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .sidebar-footer {
+    padding: 12px 10px;
+    border-top: 1px solid var(--border);
+  }
+  .btn-add {
+    width: 100%; padding: 9px; background: var(--accent);
+    color: white; border: none; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 0.15s;
+  }
+  .btn-add:hover { background: var(--accent2); }
+
+  /* MAIN */
+  .main { flex: 1; overflow-y: auto; background: var(--bg); }
+  .page { display: none; padding: 24px; max-width: 1200px; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 20px; }
+  .page-header h2 { font-size: 20px; font-weight: 600; color: var(--text); }
+  .page-header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 500; color: var(--text2);
+    margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; color: var(--text); }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* HEAD MAP */
+  .head-map-container { display: flex; justify-content: center; align-items: flex-start; gap: 24px; }
+  .head-views { display: flex; gap: 16px; }
+  .head-view { text-align: center; }
+  .head-view-label { font-size: 11px; color: var(--text3); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  svg.head { cursor: pointer; }
+  .zone { transition: opacity 0.2s; cursor: pointer; }
+  .zone:hover { opacity: 0.85; }
+  .zone.selected { stroke: white !important; stroke-width: 2.5 !important; }
+
+  /* ZONE LEGEND */
+  .zone-legend { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
+  .zone-legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text2);
+    padding: 5px 8px; border-radius: 6px;
+    cursor: pointer; transition: background 0.1s;
+  }
+  .zone-legend-item:hover { background: var(--bg3); }
+  .zone-legend-item.active { background: var(--bg3); color: var(--text); }
+  .zone-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* FORM */
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); border-radius: var(--radius-sm); padding: 8px 10px;
+    font-size: 13px; font-family: inherit;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-row textarea { min-height: 70px; resize: vertical; }
+  .form-row select option { background: var(--bg3); }
+
+  /* INTENSITY SLIDER */
+  .intensity-display { display: flex; align-items: center; gap: 12px; }
+  .intensity-display input[type=range] { flex: 1; accent-color: var(--accent); }
+  .intensity-badge {
+    min-width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+
+  /* TYPE CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px;
+    border: 1px solid var(--border2); cursor: pointer;
+    transition: all 0.15s; color: var(--text2); background: var(--bg3);
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent2); }
+  .chip.selected { background: var(--accent-bg); border-color: var(--accent); color: var(--accent2); }
+
+  /* ZONE CHIPS */
+  .zone-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .zone-chip {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px;
+    border: 1px solid var(--border2); cursor: pointer;
+    transition: all 0.15s; color: var(--text2); background: var(--bg3);
+    user-select: none;
+  }
+  .zone-chip.selected { color: white; border-color: transparent; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px;
+    font-weight: 500; cursor: pointer; border: 1px solid var(--border2);
+    background: var(--bg3); color: var(--text); transition: all 0.15s;
+  }
+  .btn:hover { background: var(--bg4); }
+  .btn-primary { background: var(--accent); border-color: transparent; color: white; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-danger { background: rgba(224,85,85,0.15); border-color: var(--red); color: var(--red); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* TIMELINE */
+  .timeline-entry {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+    margin-bottom: 10px; display: flex; align-items: flex-start; gap: 14px;
+  }
+  .entry-intensity {
+    width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+  }
+  .entry-body { flex: 1; }
+  .entry-date { font-size: 11px; color: var(--text3); }
+  .entry-zones { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .entry-zone-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 10px;
+    border: 1px solid var(--border2); color: var(--text2);
+  }
+  .entry-actions { display: flex; gap: 6px; align-items: center; }
+
+  /* DATE FILTER */
+  .date-filter {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .date-filter label { font-size: 12px; color: var(--text2); }
+  .date-filter input {
+    background: var(--bg2); border: 1px solid var(--border2);
+    color: var(--text); border-radius: var(--radius-sm); padding: 6px 10px;
+    font-size: 12px;
+  }
+  .period-btn {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px;
+    border: 1px solid var(--border2); cursor: pointer; background: var(--bg2);
+    color: var(--text2); transition: all 0.15s;
+  }
+  .period-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent2); }
+
+  /* PARETO */
+  .pareto-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius); width: 100%; max-width: 580px;
+    max-height: 90vh; overflow-y: auto; padding: 22px;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .modal-header h3 { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; padding: 2px 6px; }
+  .modal-close:hover { color: var(--text); }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+  /* HEAT LEGEND */
+  .heat-legend {
+    display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3);
+    margin-top: 10px; justify-content: center;
+  }
+  .heat-bar {
+    width: 100px; height: 8px; border-radius: 4px;
+    background: linear-gradient(to right, rgba(124,111,205,0.2), rgba(224,85,85,0.9));
+  }
+
+  /* CHART CONTAINERS */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center; padding: 40px; color: var(--text3);
+    font-size: 13px;
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* EXPORT */
+  .export-row { display: flex; gap: 8px; margin-bottom: 16px; }
+
+  /* HEAD MAP PICKER */
+  .head-picker-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200; padding: 16px;
+  }
+  .head-picker-modal.open { display: flex; }
+  .head-picker-box {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius); width: 100%; max-width: 560px;
+    padding: 22px; max-height: 95vh; overflow-y: auto;
+  }
+  .hpm-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .hpm-header h3 { font-size:15px; font-weight:600; }
+  .hpm-steps { display:flex; gap:8px; margin-bottom:18px; }
+  .hpm-step {
+    flex:1; text-align:center; font-size:11px; padding:5px 0;
+    border-radius:20px; border:1px solid var(--border2);
+    color:var(--text3); background:var(--bg3); transition:all 0.2s;
+  }
+  .hpm-step.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent2); font-weight:500; }
+  .hpm-step.done { background:rgba(77,184,122,0.15); border-color:#4db87a44; color:#4db87a; }
+
+  /* ROTATION CONTROL */
+  .head-3d-wrap {
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+  }
+  .head-canvas-area {
+    position:relative; width:240px; height:300px;
+    cursor:grab; user-select:none;
+  }
+  .head-canvas-area:active { cursor:grabbing; }
+  .head-canvas-area svg { width:100%; height:100%; }
+  .rotate-hint {
+    font-size:11px; color:var(--text3); text-align:center;
+    display:flex; align-items:center; gap:6px; justify-content:center;
+  }
+  .view-tabs {
+    display:flex; gap:6px;
+  }
+  .view-tab {
+    padding:5px 14px; border-radius:20px; font-size:12px;
+    border:1px solid var(--border2); cursor:pointer;
+    color:var(--text2); background:var(--bg3); transition:all 0.15s;
+  }
+  .view-tab.active { background:var(--accent-bg); border-color:var(--accent); color:var(--accent2); }
+
+  .selected-zones-preview {
+    display:flex; flex-wrap:wrap; gap:5px; min-height:28px; margin-top:4px;
+  }
+  .sel-zone-tag {
+    font-size:11px; padding:3px 9px; border-radius:12px;
+    display:flex; align-items:center; gap:5px; cursor:pointer;
+  }
+  .sel-zone-tag:hover { opacity:0.75; }
+
+  /* STEP 2: TYPE & INTENSITY in picker */
+  .picker-section { margin-bottom:16px; }
+  .picker-section label { display:block; font-size:12px; color:var(--text2); margin-bottom:8px; }
+  .hpm-footer { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+
+  /* Map zone clickable state */
+  .mapzone { cursor:pointer; transition:filter 0.15s, stroke-width 0.1s; }
+  .mapzone:hover { filter: brightness(1.4); }
+  .mapzone.sel { stroke-width:2.5 !important; filter: brightness(1.6) drop-shadow(0 0 4px currentColor); }
+
+  @media (max-width: 700px) {
+    .sidebar { width: 60px; min-width: 60px; }
+    .nav-item span, .sidebar-logo p, .sidebar-logo h1, .sidebar-footer { display: none; }
+    .btn-add span { display: none; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .page { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h1>🧠 CephaloLog</h1>
+      <p>Sledovanie bolesti hlavy</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Prehľad</span>
+      </div>
+      <div class="nav-item" onclick="showPage('heatmap')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8M9 19h6"/></svg>
+        <span>Mapa hlavy</span>
+      </div>
+      <div class="nav-item" onclick="showPage('timeline')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        <span>Záznamy</span>
+      </div>
+      <div class="nav-item" onclick="showPage('pareto')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Analýza</span>
+      </div>
+      <div class="nav-item" onclick="showPage('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+        <span>Nastavenia</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-add" onclick="openAddModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Nový záznam</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>Prehľad</h2>
+        <p id="dashboard-period-label">Posledných 30 dní</p>
+      </div>
+      <div class="date-filter" id="dashboard-filter">
+        <span class="period-btn active" onclick="setDashboardPeriod(7,this)">7 dní</span>
+        <span class="period-btn" onclick="setDashboardPeriod(30,this)">30 dní</span>
+        <span class="period-btn" onclick="setDashboardPeriod(90,this)">3 mesiace</span>
+        <span class="period-btn" onclick="setDashboardPeriod(365,this)">1 rok</span>
+        <label>Od:</label><input type="date" id="dash-from" onchange="applyCustomDashFilter()">
+        <label>Do:</label><input type="date" id="dash-to" onchange="applyCustomDashFilter()">
+      </div>
+      <div class="grid-4" style="margin-bottom:18px">
+        <div class="stat-card">
+          <div class="stat-label">Celkom epizód</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-sub" id="stat-total-sub">v období</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Priemerná intenzita</div>
+          <div class="stat-value" id="stat-avg">—</div>
+          <div class="stat-sub">z 10</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Priemerná dĺžka</div>
+          <div class="stat-value" id="stat-dur">—</div>
+          <div class="stat-sub" id="stat-dur-unit">hodín</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Najčastejší typ</div>
+          <div class="stat-value" style="font-size:14px;line-height:1.3" id="stat-type">—</div>
+          <div class="stat-sub" id="stat-type-sub">typ bolesti</div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-title">Výskyt v čase</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-timeline" role="img" aria-label="Výskyt bolestí hlavy v čase">Histogram výskytu bolestí hlavy.</canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Intenzita v čase</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-intensity" role="img" aria-label="Intenzita bolestí hlavy v čase">Priebeh intenzity bolestí hlavy.</canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Typy bolesti</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-types" role="img" aria-label="Rozdelenie typov bolesti">Rozdelenie typov bolesti.</canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Denný vzorec (hodiny)</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-hours" role="img" aria-label="Rozdelenie bolestí podľa hodiny dňa">Rozdelenie epizód bolesti podľa hodiny dňa.</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEATMAP PAGE -->
+    <div class="page" id="page-heatmap">
+      <div class="page-header">
+        <h2>Tepelná mapa hlavy</h2>
+        <p>Zobrazenie intenzity bolesti podľa anatomickej oblasti</p>
+      </div>
+      <div class="date-filter">
+        <span class="period-btn active" onclick="setHeatPeriod(7,this)">7 dní</span>
+        <span class="period-btn" onclick="setHeatPeriod(30,this)">30 dní</span>
+        <span class="period-btn" onclick="setHeatPeriod(90,this)">3 mesiace</span>
+        <span class="period-btn" onclick="setHeatPeriod(365,this)">Všetky</span>
+        <label>Od:</label><input type="date" id="heat-from" onchange="renderHeatmap()">
+        <label>Do:</label><input type="date" id="heat-to" onchange="renderHeatmap()">
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="head-map-container" style="flex-direction:column; align-items:center;">
+            <div class="head-views">
+              <div class="head-view">
+                <div class="head-view-label">Predok</div>
+                <svg class="head" id="svg-front" width="200" height="260" viewBox="0 0 200 260"></svg>
+              </div>
+              <div class="head-view">
+                <div class="head-view-label">Zadok</div>
+                <svg class="head" id="svg-back" width="200" height="260" viewBox="0 0 200 260"></svg>
+              </div>
+            </div>
+            <div class="heat-legend">
+              <span>Nízka</span>
+              <div class="heat-bar"></div>
+              <span>Vysoká</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Intenzita podľa zóny</div>
+          <div class="chart-wrap" style="height:300px"><canvas id="chart-zones" role="img" aria-label="Priemerná intenzita bolesti podľa zóny hlavy">Stĺpcový graf intenzity bolesti podľa zóny.</canvas></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <div class="card-title">Legenda anatomických oblastí</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:8px; margin-top:4px" id="zone-legend-full"></div>
+      </div>
+    </div>
+
+    <!-- TIMELINE PAGE -->
+    <div class="page" id="page-timeline">
+      <div class="page-header">
+        <h2>Záznamy</h2>
+        <p>Všetky epizódy bolesti hlavy</p>
+      </div>
+      <div class="date-filter">
+        <span class="period-btn active" onclick="setTimelinePeriod(30,this)">30 dní</span>
+        <span class="period-btn" onclick="setTimelinePeriod(90,this)">3 mesiace</span>
+        <span class="period-btn" onclick="setTimelinePeriod(365,this)">1 rok</span>
+        <span class="period-btn" onclick="setTimelinePeriod(9999,this)">Všetky</span>
+        <label>Od:</label><input type="date" id="tl-from" onchange="renderTimeline()">
+        <label>Do:</label><input type="date" id="tl-to" onchange="renderTimeline()">
+      </div>
+      <div class="export-row">
+        <button class="btn btn-sm" onclick="exportJSON()">⬇ Export JSON</button>
+        <label class="btn btn-sm" style="cursor:pointer">⬆ Import JSON<input type="file" accept=".json" style="display:none" onchange="importJSON(event)"></label>
+      </div>
+      <div id="timeline-list"></div>
+    </div>
+
+    <!-- PARETO PAGE -->
+    <div class="page" id="page-pareto">
+      <div class="page-header">
+        <h2>Analýza & Pareto</h2>
+        <p>Identifikácia dominantných faktorov bolesti</p>
+      </div>
+      <div class="date-filter">
+        <span class="period-btn active" onclick="setParetoFilter(30,this)">30 dní</span>
+        <span class="period-btn" onclick="setParetoFilter(90,this)">3 mesiace</span>
+        <span class="period-btn" onclick="setParetoFilter(365,this)">1 rok</span>
+        <span class="period-btn" onclick="setParetoFilter(9999,this)">Všetky</span>
+      </div>
+      <div class="pareto-controls">
+        <span class="period-btn active" onclick="setParetoAxis('type',this)">Typ bolesti</span>
+        <span class="period-btn" onclick="setParetoAxis('zone',this)">Zóna</span>
+        <span class="period-btn" onclick="setParetoAxis('intensity',this)">Intenzita</span>
+        <span class="period-btn" onclick="setParetoAxis('duration',this)">Trvanie</span>
+        <span class="period-btn" onclick="setParetoAxis('weekday',this)">Deň v týždni</span>
+        <span class="period-btn" onclick="setParetoAxis('hour',this)">Hodina dňa</span>
+      </div>
+      <div class="grid-2" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-title" id="pareto-title">Pareto — typ bolesti</div>
+          <div class="chart-wrap" style="height:300px"><canvas id="chart-pareto" role="img" aria-label="Pareto graf dominantných faktorov bolesti">Pareto analýza faktorov bolesti.</canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Kumulatívna % krivka</div>
+          <div class="chart-wrap" style="height:300px"><canvas id="chart-pareto-line" role="img" aria-label="Kumulatívna krivka Pareto analýzy">Kumulatívna krivka epizód.</canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Korelačná matica (Intenzita vs Trvanie)</div>
+        <div class="chart-wrap" style="height:280px"><canvas id="chart-scatter" role="img" aria-label="Korelačný bodový graf intenzity a trvania bolesti">Scatter plot korelácie intenzity a trvania.</canvas></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><h2>Nastavenia</h2></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Vlastné typy bolesti</div>
+          <div id="custom-types-list" style="margin-bottom:12px"></div>
+          <div style="display:flex; gap:8px">
+            <input type="text" id="new-type-input" placeholder="Nový typ bolesti..." style="flex:1; background:var(--bg3); border:1px solid var(--border2); color:var(--text); border-radius:var(--radius-sm); padding:7px 10px; font-size:13px">
+            <button class="btn btn-primary" onclick="addCustomType()">Pridať</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Dáta</div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <button class="btn" onclick="exportJSON()">⬇ Exportovať dáta (JSON)</button>
+            <label class="btn" style="cursor:pointer; text-align:center">⬆ Importovať dáta (JSON)<input type="file" accept=".json" style="display:none" onchange="importJSON(event)"></label>
+            <button class="btn btn-danger" onclick="clearAllData()">🗑 Vymazať všetky záznamy</button>
+          </div>
+          <div style="margin-top:16px; font-size:12px; color:var(--text3)">
+            <p>Dáta sú uložené lokálne v prehliadači (localStorage).</p>
+            <p style="margin-top:4px">Exportujte JSON pre zálohu alebo import do iného zariadenia.</p>
+            <p id="storage-info" style="margin-top:4px"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Nový záznam</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-row">
+        <label>Dátum a čas</label>
+        <input type="datetime-local" id="f-datetime">
+      </div>
+      <div class="form-row">
+        <label>Trvanie (minúty)</label>
+        <input type="number" id="f-duration" min="1" max="10000" placeholder="napr. 120">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Intenzita bolesti: <span id="intensity-val">5</span>/10</label>
+      <div class="intensity-display">
+        <input type="range" min="1" max="10" value="5" id="f-intensity" oninput="updateIntensityBadge(this.value)">
+        <div class="intensity-badge" id="intensity-badge">5</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Typ bolesti (môžeš vybrať viac)</label>
+      <div class="chips" id="type-chips"></div>
+    </div>
+
+    <div class="form-row">
+      <label>Anatomické zóny bolesti (môžeš vybrať viac)</label>
+      <button type="button" class="btn" style="width:100%;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px dashed var(--accent);color:var(--accent2);background:var(--accent-bg)" onclick="openHeadPicker()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8M9 19h6"/></svg>
+        Vybrať zóny na mape hlavy
+      </button>
+      <div class="zone-chips" id="zone-chips-form"></div>
+    </div>
+
+    <div class="form-row">
+      <label>Spúšťač / trigger (nepovinné)</label>
+      <input type="text" id="f-trigger" placeholder="napr. stres, málo spánku, alkohol...">
+    </div>
+
+    <div class="form-row">
+      <label>Poznámka / opis pocitu</label>
+      <textarea id="f-notes" placeholder="Vlastný opis bolesti, sprevádzajúce príznaky..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Zrušiť</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Uložiť</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEAD MAP PICKER MODAL -->
+<div class="head-picker-modal" id="head-picker-modal">
+  <div class="head-picker-box">
+    <div class="hpm-header">
+      <h3>🧠 Výber zóny bolesti</h3>
+      <button class="modal-close" onclick="closeHeadPicker()">✕</button>
+    </div>
+    <div class="hpm-steps">
+      <div class="hpm-step active" id="hpm-step1">1. Vyber zónu</div>
+      <div class="hpm-step" id="hpm-step2">2. Typ bolesti</div>
+      <div class="hpm-step" id="hpm-step3">3. Intenzita</div>
+    </div>
+    <!-- STEP 1: Head map -->
+    <div id="hpm-panel1">
+      <div class="head-3d-wrap">
+        <div class="view-tabs">
+          <div class="view-tab active" id="vtab-front" onclick="switchHeadView(this,'front')">Predok</div>
+          <div class="view-tab" id="vtab-back" onclick="switchHeadView(this,'back')">Zadok</div>
+          <div class="view-tab" id="vtab-whole" onclick="pickerSelectWhole()">Celá hlava</div>
+        </div>
+        <div class="rotate-hint">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 1 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Klikni na zónu pre výber
+        </div>
+        <div class="head-canvas-area" id="head-canvas-area">
+          <svg id="picker-head-svg" viewBox="0 0 200 270" xmlns="http://www.w3.org/2000/svg" style="width:240px;height:300px"></svg>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">Vybrané zóny:</div>
+        <div class="selected-zones-preview" id="picker-zones-preview"></div>
+      </div>
+      <div class="hpm-footer">
+        <button class="btn" onclick="closeHeadPicker()">Zrušiť</button>
+        <button class="btn btn-primary" onclick="hpmGoStep(2)">Ďalej →</button>
+      </div>
+    </div>
+    <!-- STEP 2: Pain type -->
+    <div id="hpm-panel2" style="display:none">
+      <div class="picker-section">
+        <label>Typ bolesti (môžeš vybrať viac)</label>
+        <div class="chips" id="hpm-type-chips"></div>
+      </div>
+      <div class="hpm-footer">
+        <button class="btn" onclick="hpmGoStep(1)">← Späť</button>
+        <button class="btn btn-primary" onclick="hpmGoStep(3)">Ďalej →</button>
+      </div>
+    </div>
+    <!-- STEP 3: Intensity -->
+    <div id="hpm-panel3" style="display:none">
+      <div class="picker-section">
+        <label>Intenzita bolesti: <span id="hpm-intensity-val">5</span>/10</label>
+        <div class="intensity-display">
+          <input type="range" min="1" max="10" value="5" id="hpm-intensity" oninput="hpmUpdateBadge(this.value)">
+          <div class="intensity-badge" id="hpm-intensity-badge">5</div>
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--text2);margin-top:4px">
+        <div style="margin-bottom:6px;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Súhrn</div>
+        <div id="hpm-summary"></div>
+      </div>
+      <div class="hpm-footer">
+        <button class="btn" onclick="hpmGoStep(2)">← Späť</button>
+        <button class="btn btn-primary" onclick="hpmConfirm()">✓ Potvrdiť a preniesť</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA DEFINITIONS
+// ============================================================
+const ZONES = [
+  { id: 'forehead',     label: 'Čelo',                color: '#a897f5', front: true },
+  { id: 'temple_l',     label: 'Ľavý spánok',         color: '#e05555', front: true },
+  { id: 'temple_r',     label: 'Pravý spánok',         color: '#e05555', front: true },
+  { id: 'eye_l',        label: 'Ľavá očnica',          color: '#e08a3a', front: true },
+  { id: 'eye_r',        label: 'Pravá očnica',          color: '#e08a3a', front: true },
+  { id: 'sinus',        label: 'Sinus / nos',          color: '#d4b84a', front: true },
+  { id: 'jaw_l',        label: 'Ľavá čeľusť',          color: '#4db87a', front: true },
+  { id: 'jaw_r',        label: 'Pravá čeľusť',          color: '#4db87a', front: true },
+  { id: 'crown',        label: 'Temeno',               color: '#3db8a0', front: false },
+  { id: 'occiput',      label: 'Záhlav (zátylok)',     color: '#7c6fcd', front: false },
+  { id: 'neck_l',       label: 'Ľavá šija',            color: '#e05555', front: false },
+  { id: 'neck_r',       label: 'Pravá šija',            color: '#e05555', front: false },
+  { id: 'whole',        label: 'Celá hlava',           color: '#9ba3b8', front: true },
+];
+
+const BASE_TYPES = [
+  'Pulzujúca / búšenie',
+  'Tupá / tlak',
+  'Pálivá',
+  'Bodavá / strieľajúca',
+  'Zvierajúca / obruč',
+  'Trhavá / záchvatovitá',
+  'Migréna',
+  'Klastrová bolesť',
+  'Cervikogénna (krčná)',
+  'Napätostná',
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let entries = [];
+let customTypes = [];
+let editingId = null;
+let dashDays = 30, heatDays = 30, tlDays = 30, paretoDays = 30;
+let paretoAxis = 'type';
+let chartInstances = {};
+
+function loadData() {
+  try {
+    entries = JSON.parse(localStorage.getItem('ch_entries') || '[]');
+    customTypes = JSON.parse(localStorage.getItem('ch_custom_types') || '[]');
+  } catch(e) { entries = []; customTypes = []; }
+}
+function saveData() {
+  localStorage.setItem('ch_entries', JSON.stringify(entries));
+  localStorage.setItem('ch_custom_types', JSON.stringify(customTypes));
+  updateStorageInfo();
+}
+function updateStorageInfo() {
+  const bytes = (localStorage.getItem('ch_entries') || '').length;
+  const el = document.getElementById('storage-info');
+  if (el) el.textContent = `Uložené záznamy: ${entries.length} | Veľkosť: ~${Math.round(bytes/1024*10)/10} KB`;
+}
+function getAllTypes() { return [...BASE_TYPES, ...customTypes]; }
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const idx = ['dashboard','heatmap','timeline','pareto','settings'].indexOf(id);
+  document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'heatmap') renderHeatmap();
+  if (id === 'timeline') renderTimeline();
+  if (id === 'pareto') renderPareto();
+  if (id === 'settings') renderSettings();
+}
+
+// ============================================================
+// FILTER HELPERS
+// ============================================================
+function filterByDays(days, fromId, toId) {
+  const now = new Date();
+  let from = fromId ? document.getElementById(fromId)?.value : null;
+  let to = toId ? document.getElementById(toId)?.value : null;
+  if (from || to) {
+    const f = from ? new Date(from) : new Date(0);
+    const t = to ? new Date(to + 'T23:59:59') : now;
+    return entries.filter(e => { const d = new Date(e.datetime); return d >= f && d <= t; });
+  }
+  const cutoff = new Date(now - days * 86400000);
+  return entries.filter(e => new Date(e.datetime) >= cutoff);
+}
+
+function setPeriodBtnActive(clicked, container) {
+  container.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  clicked.classList.add('active');
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openAddModal(id = null) {
+  editingId = id;
+  const entry = id ? entries.find(e => e.id === id) : null;
+  document.getElementById('modal-title').textContent = id ? 'Upraviť záznam' : 'Nový záznam';
+
+  const now = new Date();
+  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  document.getElementById('f-datetime').value = entry ? entry.datetime.slice(0,16) : local;
+  document.getElementById('f-duration').value = entry ? entry.duration : '';
+  document.getElementById('f-intensity').value = entry ? entry.intensity : 5;
+  document.getElementById('f-trigger').value = entry ? (entry.trigger || '') : '';
+  document.getElementById('f-notes').value = entry ? (entry.notes || '') : '';
+  updateIntensityBadge(entry ? entry.intensity : 5);
+
+  // type chips
+  const tc = document.getElementById('type-chips');
+  tc.innerHTML = '';
+  getAllTypes().forEach(t => {
+    const ch = document.createElement('div');
+    ch.className = 'chip' + (entry && entry.types.includes(t) ? ' selected' : '');
+    ch.textContent = t;
+    ch.onclick = () => ch.classList.toggle('selected');
+    tc.appendChild(ch);
+  });
+
+  // zone chips
+  const zc = document.getElementById('zone-chips-form');
+  zc.innerHTML = '';
+  ZONES.forEach(z => {
+    const ch = document.createElement('div');
+    ch.className = 'zone-chip' + (entry && entry.zones.includes(z.id) ? ' selected' : '');
+    ch.textContent = z.label;
+    ch.dataset.id = z.id;
+    ch.style.backgroundColor = entry && entry.zones.includes(z.id) ? z.color + '33' : '';
+    ch.style.borderColor = entry && entry.zones.includes(z.id) ? z.color : '';
+    ch.style.color = entry && entry.zones.includes(z.id) ? z.color : '';
+    ch.onclick = () => {
+      ch.classList.toggle('selected');
+      if (ch.classList.contains('selected')) {
+        ch.style.backgroundColor = z.color + '33';
+        ch.style.borderColor = z.color;
+        ch.style.color = z.color;
+      } else {
+        ch.style.backgroundColor = '';
+        ch.style.borderColor = '';
+        ch.style.color = '';
+      }
+    };
+    zc.appendChild(ch);
+  });
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+function updateIntensityBadge(v) {
+  v = parseInt(v);
+  document.getElementById('intensity-val').textContent = v;
+  const badge = document.getElementById('intensity-badge');
+  badge.textContent = v;
+  const colors = ['','#4db87a','#4db87a','#7bc96f','#d4b84a','#d4b84a','#e08a3a','#e08a3a','#e05555','#e05555','#cc2222'];
+  badge.style.background = (colors[v] || '#7c6fcd') + '33';
+  badge.style.color = colors[v] || '#7c6fcd';
+}
+
+function saveEntry() {
+  const datetime = document.getElementById('f-datetime').value;
+  if (!datetime) { alert('Zadaj dátum a čas'); return; }
+  const intensity = parseInt(document.getElementById('f-intensity').value);
+  const duration = parseInt(document.getElementById('f-duration').value) || null;
+  const trigger = document.getElementById('f-trigger').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+  const types = [...document.querySelectorAll('#type-chips .chip.selected')].map(c => c.textContent);
+  const zones = [...document.querySelectorAll('#zone-chips-form .zone-chip.selected')].map(c => c.dataset.id);
+
+  if (editingId) {
+    const idx = entries.findIndex(e => e.id === editingId);
+    if (idx >= 0) entries[idx] = { ...entries[idx], datetime, intensity, duration, trigger, notes, types, zones };
+  } else {
+    entries.push({ id: Date.now().toString(), datetime, intensity, duration, trigger, notes, types, zones });
+  }
+  entries.sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+  saveData();
+  closeModal();
+  const activePage = document.querySelector('.page.active')?.id.replace('page-','');
+  if (activePage) showPage(activePage);
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+let dashCharts = {};
+
+function setDashboardPeriod(days, el) {
+  dashDays = days;
+  document.getElementById('dash-from').value = '';
+  document.getElementById('dash-to').value = '';
+  setPeriodBtnActive(el, document.getElementById('dashboard-filter'));
+  renderDashboard();
+}
+function applyCustomDashFilter() { renderDashboard(); }
+
+function destroyChart(id) {
+  if (dashCharts[id]) { dashCharts[id].destroy(); delete dashCharts[id]; }
+}
+
+function renderDashboard() {
+  const data = filterByDays(dashDays, 'dash-from', 'dash-to');
+  document.getElementById('stat-total').textContent = data.length;
+
+  if (data.length === 0) {
+    document.getElementById('stat-avg').textContent = '—';
+    document.getElementById('stat-dur').textContent = '—';
+    document.getElementById('stat-type').textContent = '—';
+    ['chart-timeline','chart-intensity','chart-types','chart-hours'].forEach(id => destroyChart(id));
+    return;
+  }
+
+  const avg = data.reduce((s,e) => s + e.intensity, 0) / data.length;
+  document.getElementById('stat-avg').textContent = avg.toFixed(1);
+
+  const withDur = data.filter(e => e.duration);
+  if (withDur.length) {
+    const avgMin = withDur.reduce((s,e) => s+e.duration, 0) / withDur.length;
+    if (avgMin >= 60) {
+      document.getElementById('stat-dur').textContent = (avgMin/60).toFixed(1);
+      document.getElementById('stat-dur-unit').textContent = 'hodín';
+    } else {
+      document.getElementById('stat-dur').textContent = Math.round(avgMin);
+      document.getElementById('stat-dur-unit').textContent = 'minút';
+    }
+  } else {
+    document.getElementById('stat-dur').textContent = '—';
+  }
+
+  // most common type
+  const typeCounts = {};
+  data.forEach(e => (e.types || []).forEach(t => { typeCounts[t] = (typeCounts[t]||0)+1; }));
+  const topType = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stat-type').textContent = topType ? topType[0] : '—';
+  document.getElementById('stat-type-sub').textContent = topType ? `${topType[1]}× zaznamenaná` : 'typ bolesti';
+
+  // Timeline histogram (by date)
+  const buckets = {};
+  data.forEach(e => {
+    const d = e.datetime.slice(0,10);
+    buckets[d] = (buckets[d]||0)+1;
+  });
+  const tLabels = Object.keys(buckets).sort();
+  const tVals = tLabels.map(l => buckets[l]);
+
+  destroyChart('chart-timeline');
+  dashCharts['chart-timeline'] = new Chart(document.getElementById('chart-timeline'), {
+    type: 'bar',
+    data: { labels: tLabels, datasets: [{ label: 'Epizódy', data: tVals, backgroundColor: '#7c6fcd88', borderColor: '#a897f5', borderWidth: 1 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7490', maxRotation: 45, autoSkip: true }, grid: { color: '#ffffff08' } },
+        y: { ticks: { color: '#6b7490', stepSize: 1 }, grid: { color: '#ffffff08' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Intensity line
+  const iByDate = {};
+  const iCount = {};
+  data.forEach(e => {
+    const d = e.datetime.slice(0,10);
+    iByDate[d] = (iByDate[d]||0) + e.intensity;
+    iCount[d] = (iCount[d]||0)+1;
+  });
+  const iLabels = Object.keys(iByDate).sort();
+  const iVals = iLabels.map(l => Math.round(iByDate[l]/iCount[l]*10)/10);
+
+  destroyChart('chart-intensity');
+  dashCharts['chart-intensity'] = new Chart(document.getElementById('chart-intensity'), {
+    type: 'line',
+    data: { labels: iLabels, datasets: [{ label: 'Intenzita', data: iVals, borderColor: '#e05555', backgroundColor: '#e0555522', tension: 0.3, pointRadius: 3 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7490', autoSkip: true, maxRotation: 45 }, grid: { color: '#ffffff08' } },
+        y: { min: 0, max: 10, ticks: { color: '#6b7490' }, grid: { color: '#ffffff08' } }
+      }
+    }
+  });
+
+  // Types pie
+  const typeArr = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const PIE_COLORS = ['#a897f5','#e05555','#e08a3a','#d4b84a','#4db87a','#3db8a0','#7c6fcd','#9ba3b8'];
+
+  destroyChart('chart-types');
+  dashCharts['chart-types'] = new Chart(document.getElementById('chart-types'), {
+    type: 'doughnut',
+    data: {
+      labels: typeArr.map(t=>t[0]),
+      datasets: [{ data: typeArr.map(t=>t[1]), backgroundColor: PIE_COLORS, borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#9ba3b8', font: { size: 11 }, boxWidth: 12 } } }
+    }
+  });
+
+  // Hours bar
+  const hours = new Array(24).fill(0);
+  data.forEach(e => { const h = new Date(e.datetime).getHours(); hours[h]++; });
+  const hLabels = Array.from({length:24}, (_,i)=>`${i}:00`);
+
+  destroyChart('chart-hours');
+  dashCharts['chart-hours'] = new Chart(document.getElementById('chart-hours'), {
+    type: 'bar',
+    data: { labels: hLabels, datasets: [{ label: 'Epizódy', data: hours, backgroundColor: '#e08a3a55', borderColor: '#e08a3a', borderWidth: 1 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7490', autoSkip: true, maxRotation: 45 }, grid: { color: '#ffffff08' } },
+        y: { ticks: { color: '#6b7490', stepSize: 1 }, grid: { color: '#ffffff08' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ============================================================
+// HEATMAP
+// ============================================================
+let heatCharts = {};
+
+function setHeatPeriod(days, el) {
+  heatDays = days;
+  document.getElementById('heat-from').value = '';
+  document.getElementById('heat-to').value = '';
+  setPeriodBtnActive(el, document.querySelector('#page-heatmap .date-filter'));
+  renderHeatmap();
+}
+
+function intensityToHeat(val, max) {
+  if (!max || !val) return 'rgba(124,111,205,0.12)';
+  const ratio = val / max;
+  const r = Math.round(100 + ratio * 124);
+  const g = Math.round(40 + (1-ratio) * 80);
+  const b = Math.round(200 - ratio * 145);
+  return `rgba(${r},${g},${b},${0.25 + ratio * 0.65})`;
+}
+
+function renderHeatmap() {
+  const data = filterByDays(heatDays, 'heat-from', 'heat-to');
+
+  // compute zone stats
+  const zoneSum = {}, zoneCount = {};
+  ZONES.forEach(z => { zoneSum[z.id] = 0; zoneCount[z.id] = 0; });
+  data.forEach(e => {
+    (e.zones||[]).forEach(zid => {
+      zoneSum[zid] = (zoneSum[zid]||0) + e.intensity;
+      zoneCount[zid] = (zoneCount[zid]||0) + 1;
+    });
+  });
+  const zoneAvg = {};
+  ZONES.forEach(z => {
+    zoneAvg[z.id] = zoneCount[z.id] ? zoneSum[z.id] / zoneCount[z.id] : 0;
+  });
+  const maxAvg = Math.max(...Object.values(zoneAvg), 1);
+
+  drawHeadSVG('svg-front', true, zoneAvg, maxAvg);
+  drawHeadSVG('svg-back', false, zoneAvg, maxAvg);
+
+  // Zone bar chart
+  const zLabels = ZONES.map(z => z.label);
+  const zVals = ZONES.map(z => Math.round(zoneAvg[z.id]*10)/10);
+  const zColors = ZONES.map(z => z.color + 'cc');
+
+  if (heatCharts['chart-zones']) { heatCharts['chart-zones'].destroy(); }
+  heatCharts['chart-zones'] = new Chart(document.getElementById('chart-zones'), {
+    type: 'bar',
+    data: {
+      labels: zLabels,
+      datasets: [{ label: 'Priem. intenzita', data: zVals, backgroundColor: zColors, borderWidth: 0 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { min: 0, max: 10, ticks: { color: '#6b7490' }, grid: { color: '#ffffff08' } },
+        y: { ticks: { color: '#9ba3b8', font: { size: 11 } }, grid: { color: '#ffffff08' } }
+      }
+    }
+  });
+
+  // Full legend
+  const leg = document.getElementById('zone-legend-full');
+  leg.innerHTML = '';
+  ZONES.forEach(z => {
+    const cnt = zoneCount[z.id];
+    const avg = zoneAvg[z.id];
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);';
+    item.innerHTML = `<div style="width:12px;height:12px;border-radius:3px;background:${z.color};flex-shrink:0"></div>
+      <span style="flex:1;font-size:12px;color:var(--text)">${z.label}</span>
+      <span style="font-size:11px;color:var(--text3)">${cnt > 0 ? cnt + 'x · ø' + avg.toFixed(1) : '—'}</span>`;
+    leg.appendChild(item);
+  });
+}
+
+function drawHeadSVG(svgId, isFront, zoneAvg, maxAvg) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+
+  function el(tag, attrs, text) {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k,v));
+    if (text) e.textContent = text;
+    return e;
+  }
+  function heatColor(zid) { return intensityToHeat(zoneAvg[zid], maxAvg); }
+
+  // Head outline
+  const headFill = '#1e2535';
+  const stroke = '#404870';
+
+  if (isFront) {
+    // Skull shape front
+    svg.appendChild(el('ellipse', { cx:100, cy:110, rx:70, ry:85, fill: headFill, stroke, 'stroke-width':'1.5' }));
+    // Neck
+    svg.appendChild(el('rect', { x:82, y:185, width:36, height:40, rx:8, fill: headFill, stroke, 'stroke-width':'1.5' }));
+    // Shoulders hint
+    svg.appendChild(el('path', { d:'M 55 225 Q 100 240 145 225', fill:'none', stroke, 'stroke-width':'1.5' }));
+    // Ear left
+    svg.appendChild(el('ellipse', { cx:28, cy:115, rx:9, ry:15, fill: headFill, stroke, 'stroke-width':'1' }));
+    // Ear right
+    svg.appendChild(el('ellipse', { cx:172, cy:115, rx:9, ry:15, fill: headFill, stroke, 'stroke-width':'1' }));
+
+    // --- ZONES ---
+    // Forehead
+    const fh = el('ellipse', { cx:100, cy:62, rx:52, ry:30, fill: heatColor('forehead'), stroke: ZONES.find(z=>z.id==='forehead').color, 'stroke-width':'1', 'fill-opacity':'0.85' });
+    fh.setAttribute('data-zone','forehead'); fh.classList.add('zone');
+    addZoneTooltip(fh, 'forehead'); svg.appendChild(fh);
+
+    // Temple left
+    const tl = el('ellipse', { cx:40, cy:100, rx:22, ry:28, fill: heatColor('temple_l'), stroke: ZONES.find(z=>z.id==='temple_l').color, 'stroke-width':'1' });
+    tl.setAttribute('data-zone','temple_l'); tl.classList.add('zone');
+    addZoneTooltip(tl, 'temple_l'); svg.appendChild(tl);
+
+    // Temple right
+    const tr = el('ellipse', { cx:160, cy:100, rx:22, ry:28, fill: heatColor('temple_r'), stroke: ZONES.find(z=>z.id==='temple_r').color, 'stroke-width':'1' });
+    tr.setAttribute('data-zone','temple_r'); tr.classList.add('zone');
+    addZoneTooltip(tr, 'temple_r'); svg.appendChild(tr);
+
+    // Eye left
+    const el2 = el('ellipse', { cx:75, cy:115, rx:20, ry:13, fill: heatColor('eye_l'), stroke: ZONES.find(z=>z.id==='eye_l').color, 'stroke-width':'1' });
+    el2.setAttribute('data-zone','eye_l'); el2.classList.add('zone');
+    addZoneTooltip(el2, 'eye_l'); svg.appendChild(el2);
+
+    // Eye right
+    const er = el('ellipse', { cx:125, cy:115, rx:20, ry:13, fill: heatColor('eye_r'), stroke: ZONES.find(z=>z.id==='eye_r').color, 'stroke-width':'1' });
+    er.setAttribute('data-zone','eye_r'); er.classList.add('zone');
+    addZoneTooltip(er, 'eye_r'); svg.appendChild(er);
+
+    // Sinus / nose
+    const sn = el('ellipse', { cx:100, cy:140, rx:15, ry:20, fill: heatColor('sinus'), stroke: ZONES.find(z=>z.id==='sinus').color, 'stroke-width':'1' });
+    sn.setAttribute('data-zone','sinus'); sn.classList.add('zone');
+    addZoneTooltip(sn, 'sinus'); svg.appendChild(sn);
+
+    // Jaw left
+    const jl = el('ellipse', { cx:68, cy:170, rx:22, ry:15, fill: heatColor('jaw_l'), stroke: ZONES.find(z=>z.id==='jaw_l').color, 'stroke-width':'1' });
+    jl.setAttribute('data-zone','jaw_l'); jl.classList.add('zone');
+    addZoneTooltip(jl, 'jaw_l'); svg.appendChild(jl);
+
+    // Jaw right
+    const jr = el('ellipse', { cx:132, cy:170, rx:22, ry:15, fill: heatColor('jaw_r'), stroke: ZONES.find(z=>z.id==='jaw_r').color, 'stroke-width':'1' });
+    jr.setAttribute('data-zone','jaw_r'); jr.classList.add('zone');
+    addZoneTooltip(jr, 'jaw_r'); svg.appendChild(jr);
+
+    // Whole head overlay (subtle)
+    if (zoneAvg['whole'] > 0) {
+      const wh = el('ellipse', { cx:100, cy:110, rx:68, ry:83, fill: heatColor('whole'), stroke: ZONES.find(z=>z.id==='whole').color, 'stroke-width':'1.5', 'fill-opacity':'0.3' });
+      wh.setAttribute('data-zone','whole'); wh.classList.add('zone');
+      addZoneTooltip(wh, 'whole'); svg.appendChild(wh);
+    }
+
+    // Labels
+    const labels = [
+      { text:'Čelo', x:100, y:56 },
+      { text:'Ľ. spánok', x:38, y:97 },
+      { text:'P. spánok', x:162, y:97 },
+      { text:'Ľ. oko', x:74, y:113 },
+      { text:'P. oko', x:126, y:113 },
+      { text:'Sinus', x:100, y:138 },
+      { text:'Ľ. čeľ.', x:67, y:168 },
+      { text:'P. čeľ.', x:133, y:168 },
+    ];
+    labels.forEach(lb => {
+      const t = el('text', { x:lb.x, y:lb.y, 'text-anchor':'middle', 'dominant-baseline':'middle', fill:'#ffffff', 'font-size':'8', 'font-weight':'500', 'pointer-events':'none' });
+      t.textContent = lb.text;
+      svg.appendChild(t);
+    });
+
+  } else {
+    // Back view
+    svg.appendChild(el('ellipse', { cx:100, cy:110, rx:70, ry:85, fill: headFill, stroke, 'stroke-width':'1.5' }));
+    svg.appendChild(el('rect', { x:82, y:185, width:36, height:40, rx:8, fill: headFill, stroke, 'stroke-width':'1.5' }));
+    svg.appendChild(el('path', { d:'M 55 225 Q 100 240 145 225', fill:'none', stroke, 'stroke-width':'1.5' }));
+    svg.appendChild(el('ellipse', { cx:28, cy:115, rx:9, ry:15, fill: headFill, stroke, 'stroke-width':'1' }));
+    svg.appendChild(el('ellipse', { cx:172, cy:115, rx:9, ry:15, fill: headFill, stroke, 'stroke-width':'1' }));
+
+    // Crown (top)
+    const cr = el('ellipse', { cx:100, cy:50, rx:55, ry:38, fill: heatColor('crown'), stroke: ZONES.find(z=>z.id==='crown').color, 'stroke-width':'1' });
+    cr.setAttribute('data-zone','crown'); cr.classList.add('zone');
+    addZoneTooltip(cr, 'crown'); svg.appendChild(cr);
+
+    // Occiput
+    const oc = el('ellipse', { cx:100, cy:130, rx:55, ry:48, fill: heatColor('occiput'), stroke: ZONES.find(z=>z.id==='occiput').color, 'stroke-width':'1' });
+    oc.setAttribute('data-zone','occiput'); oc.classList.add('zone');
+    addZoneTooltip(oc, 'occiput'); svg.appendChild(oc);
+
+    // Neck left
+    const nl = el('ellipse', { cx:75, cy:195, rx:18, ry:20, fill: heatColor('neck_l'), stroke: ZONES.find(z=>z.id==='neck_l').color, 'stroke-width':'1' });
+    nl.setAttribute('data-zone','neck_l'); nl.classList.add('zone');
+    addZoneTooltip(nl, 'neck_l'); svg.appendChild(nl);
+
+    // Neck right
+    const nr = el('ellipse', { cx:125, cy:195, rx:18, ry:20, fill: heatColor('neck_r'), stroke: ZONES.find(z=>z.id==='neck_r').color, 'stroke-width':'1' });
+    nr.setAttribute('data-zone','neck_r'); nr.classList.add('zone');
+    addZoneTooltip(nr, 'neck_r'); svg.appendChild(nr);
+
+    // Whole
+    if (zoneAvg['whole'] > 0) {
+      const wh = el('ellipse', { cx:100, cy:110, rx:68, ry:83, fill: heatColor('whole'), stroke: ZONES.find(z=>z.id==='whole').color, 'stroke-width':'1.5', 'fill-opacity':'0.3' });
+      wh.setAttribute('data-zone','whole'); wh.classList.add('zone');
+      addZoneTooltip(wh, 'whole'); svg.appendChild(wh);
+    }
+
+    const labels = [
+      { text:'Temeno', x:100, y:48 },
+      { text:'Záhlav', x:100, y:128 },
+      { text:'Ľ. šija', x:74, y:193 },
+      { text:'P. šija', x:126, y:193 },
+    ];
+    labels.forEach(lb => {
+      const t = el('text', { x:lb.x, y:lb.y, 'text-anchor':'middle', 'dominant-baseline':'middle', fill:'#ffffff', 'font-size':'8', 'font-weight':'500', 'pointer-events':'none' });
+      t.textContent = lb.text;
+      svg.appendChild(t);
+    });
+  }
+}
+
+let tooltip = null;
+function addZoneTooltip(elem, zid) {
+  const zone = ZONES.find(z => z.id === zid);
+  elem.addEventListener('mouseenter', (evt) => {
+    removeTooltip();
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;background:#252d40;border:1px solid #404870;color:#e8eaf0;font-size:12px;padding:6px 10px;border-radius:8px;pointer-events:none;z-index:200;`;
+    const cnt = entries.filter(e => (e.zones||[]).includes(zid)).length;
+    const avg = cnt ? (entries.filter(e => (e.zones||[]).includes(zid)).reduce((s,e)=>s+e.intensity,0)/cnt).toFixed(1) : '—';
+    t.innerHTML = `<strong style="color:${zone.color}">${zone.label}</strong><br>Epizódy: ${cnt}<br>Priem. intenzita: ${avg}`;
+    t.style.left = (evt.clientX + 12) + 'px';
+    t.style.top = (evt.clientY - 10) + 'px';
+    document.body.appendChild(t);
+    tooltip = t;
+  });
+  elem.addEventListener('mousemove', (evt) => {
+    if (tooltip) { tooltip.style.left = (evt.clientX + 12) + 'px'; tooltip.style.top = (evt.clientY - 10) + 'px'; }
+  });
+  elem.addEventListener('mouseleave', removeTooltip);
+}
+function removeTooltip() { if (tooltip) { tooltip.remove(); tooltip = null; } }
+
+// ============================================================
+// TIMELINE
+// ============================================================
+function setTimelinePeriod(days, el) {
+  tlDays = days;
+  document.getElementById('tl-from').value = '';
+  document.getElementById('tl-to').value = '';
+  setPeriodBtnActive(el, document.querySelector('#page-timeline .date-filter'));
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const data = filterByDays(tlDays, 'tl-from', 'tl-to');
+  const list = document.getElementById('timeline-list');
+
+  if (data.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Žiadne záznamy v tomto období.<br>Pridaj prvý záznam tlačidlom "Nový záznam".</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(e => {
+    const intensity = e.intensity;
+    const colors = ['','#4db87a','#4db87a','#7bc96f','#d4b84a','#d4b84a','#e08a3a','#e08a3a','#e05555','#e05555','#cc2222'];
+    const col = colors[intensity] || '#7c6fcd';
+    const dt = new Date(e.datetime);
+    const dateStr = dt.toLocaleDateString('sk-SK', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const dur = e.duration ? (e.duration >= 60 ? (e.duration/60).toFixed(1) + ' hod' : e.duration + ' min') : '';
+    const zones = (e.zones||[]).map(zid => {
+      const z = ZONES.find(z=>z.id===zid);
+      return z ? `<span class="entry-zone-tag" style="border-color:${z.color}33;color:${z.color}">${z.label}</span>` : '';
+    }).join('');
+    const types = (e.types||[]).join(' · ');
+    return `<div class="timeline-entry">
+      <div class="entry-intensity" style="background:${col}22;color:${col}">${intensity}</div>
+      <div class="entry-body">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:500;color:var(--text)">${dateStr}</span>
+          ${dur ? `<span style="font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 7px;border-radius:10px">${dur}</span>` : ''}
+        </div>
+        ${types ? `<div style="font-size:12px;color:var(--text2);margin-top:4px">${types}</div>` : ''}
+        ${e.trigger ? `<div style="font-size:11px;color:var(--text3);margin-top:3px">⚡ ${e.trigger}</div>` : ''}
+        ${e.notes ? `<div style="font-size:12px;color:var(--text2);margin-top:4px;font-style:italic">${e.notes}</div>` : ''}
+        ${zones ? `<div class="entry-zones">${zones}</div>` : ''}
+      </div>
+      <div class="entry-actions">
+        <button class="btn btn-sm" onclick="openAddModal('${e.id}')">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteEntry('${e.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteEntry(id) {
+  if (!confirm('Vymazať tento záznam?')) return;
+  entries = entries.filter(e => e.id !== id);
+  saveData();
+  renderTimeline();
+}
+
+// ============================================================
+// PARETO
+// ============================================================
+let paretoCharts = {};
+
+function setParetoFilter(days, el) {
+  paretoDays = days;
+  setPeriodBtnActive(el, document.querySelector('#page-pareto .date-filter'));
+  renderPareto();
+}
+function setParetoAxis(axis, el) {
+  paretoAxis = axis;
+  setPeriodBtnActive(el, document.querySelector('.pareto-controls'));
+  renderPareto();
+}
+
+function renderPareto() {
+  const data = filterByDays(paretoDays, null, null);
+  const titles = { type:'Typ bolesti', zone:'Anatomická zóna', intensity:'Intenzita', duration:'Trvanie (min)', weekday:'Deň v týždni', hour:'Hodina dňa' };
+  document.getElementById('pareto-title').textContent = 'Pareto — ' + titles[paretoAxis];
+
+  let counts = {};
+  if (paretoAxis === 'type') {
+    data.forEach(e => (e.types||[]).forEach(t => { counts[t] = (counts[t]||0)+1; }));
+  } else if (paretoAxis === 'zone') {
+    data.forEach(e => (e.zones||[]).forEach(z => {
+      const zl = ZONES.find(x=>x.id===z)?.label || z;
+      counts[zl] = (counts[zl]||0)+1;
+    }));
+  } else if (paretoAxis === 'intensity') {
+    data.forEach(e => { const k='Intenzita '+e.intensity; counts[k]=(counts[k]||0)+1; });
+  } else if (paretoAxis === 'duration') {
+    data.forEach(e => {
+      if (!e.duration) return;
+      let bucket;
+      if (e.duration < 30) bucket = '< 30 min';
+      else if (e.duration < 60) bucket = '30–60 min';
+      else if (e.duration < 180) bucket = '1–3 hod';
+      else if (e.duration < 480) bucket = '3–8 hod';
+      else bucket = '> 8 hod';
+      counts[bucket] = (counts[bucket]||0)+1;
+    });
+  } else if (paretoAxis === 'weekday') {
+    const days = ['Nedeľa','Pondelok','Utorok','Streda','Štvrtok','Piatok','Sobota'];
+    data.forEach(e => { const d = days[new Date(e.datetime).getDay()]; counts[d]=(counts[d]||0)+1; });
+  } else if (paretoAxis === 'hour') {
+    data.forEach(e => { const h = new Date(e.datetime).getHours() + ':00'; counts[h]=(counts[h]||0)+1; });
+  }
+
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const total = sorted.reduce((s,x)=>s+x[1], 0);
+  const labels = sorted.map(x=>x[0]);
+  const vals = sorted.map(x=>x[1]);
+  const cumul = [];
+  let sum = 0;
+  vals.forEach(v => { sum += v; cumul.push(Math.round(sum/total*100)); });
+
+  const COLORS = ['#a897f5','#e05555','#e08a3a','#d4b84a','#4db87a','#3db8a0','#7c6fcd','#9ba3b8','#e08a3a','#3db8a0'];
+
+  if (paretoCharts['chart-pareto']) paretoCharts['chart-pareto'].destroy();
+  paretoCharts['chart-pareto'] = new Chart(document.getElementById('chart-pareto'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Epizódy', data: vals, backgroundColor: labels.map((_,i)=>COLORS[i%COLORS.length]+'bb'), borderWidth: 0 }]
+    },
+    options: {
+      indexAxis: labels.length > 6 ? 'y' : 'x',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7490', autoSkip: true, maxRotation: 35, font: { size: 11 } }, grid: { color: '#ffffff08' } },
+        y: { ticks: { color: '#6b7490', font: { size: 11 } }, grid: { color: '#ffffff08' }, beginAtZero: true }
+      }
+    }
+  });
+
+  if (paretoCharts['chart-pareto-line']) paretoCharts['chart-pareto-line'].destroy();
+  paretoCharts['chart-pareto-line'] = new Chart(document.getElementById('chart-pareto-line'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Kumulatívne %', data: cumul, borderColor: '#a897f5', backgroundColor: '#a897f522', tension: 0.3, pointRadius: 4, yAxisID: 'y1' },
+        { label: 'Počet', data: vals, borderColor: '#e0555588', backgroundColor: 'transparent', borderDash: [4,4], tension: 0, pointRadius: 3, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#9ba3b8', font: { size: 11 }, boxWidth: 12 } } },
+      scales: {
+        x: { ticks: { color: '#6b7490', autoSkip: true, maxRotation: 35, font: { size: 10 } }, grid: { color: '#ffffff08' } },
+        y1: { position: 'left', min: 0, max: 100, ticks: { color: '#a897f5', callback: v => v + '%' }, grid: { color: '#ffffff08' } },
+        y2: { position: 'right', beginAtZero: true, ticks: { color: '#e05555' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Scatter plot: intensity vs duration
+  const scatterData = entries.filter(e => e.duration).map(e => ({ x: e.intensity, y: e.duration > 1440 ? 1440 : e.duration }));
+  if (paretoCharts['chart-scatter']) paretoCharts['chart-scatter'].destroy();
+  paretoCharts['chart-scatter'] = new Chart(document.getElementById('chart-scatter'), {
+    type: 'scatter',
+    data: { datasets: [{ label: 'Epizódy', data: scatterData, backgroundColor: '#7c6fcd99', pointRadius: 5, pointHoverRadius: 7 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `Intenzita: ${ctx.parsed.x}, Trvanie: ${ctx.parsed.y} min` } } },
+      scales: {
+        x: { min: 0, max: 11, title: { display: true, text: 'Intenzita', color: '#6b7490' }, ticks: { color: '#6b7490' }, grid: { color: '#ffffff08' } },
+        y: { beginAtZero: true, title: { display: true, text: 'Trvanie (min)', color: '#6b7490' }, ticks: { color: '#6b7490' }, grid: { color: '#ffffff08' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function renderSettings() {
+  const list = document.getElementById('custom-types-list');
+  if (customTypes.length === 0) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:12px;margin-bottom:8px">Žiadne vlastné typy.</div>';
+  } else {
+    list.innerHTML = customTypes.map((t,i) =>
+      `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="flex:1;font-size:13px;color:var(--text)">${t}</span>
+        <button class="btn btn-sm btn-danger" onclick="removeCustomType(${i})">✕</button>
+      </div>`
+    ).join('');
+  }
+  updateStorageInfo();
+}
+
+function addCustomType() {
+  const val = document.getElementById('new-type-input').value.trim();
+  if (!val) return;
+  if (!customTypes.includes(val) && !BASE_TYPES.includes(val)) {
+    customTypes.push(val);
+    saveData();
+  }
+  document.getElementById('new-type-input').value = '';
+  renderSettings();
+}
+
+function removeCustomType(i) {
+  customTypes.splice(i, 1);
+  saveData();
+  renderSettings();
+}
+
+function clearAllData() {
+  if (!confirm('Naozaj vymazať VŠETKY záznamy? Táto akcia je nevratná.')) return;
+  entries = [];
+  saveData();
+  renderSettings();
+  alert('Všetky záznamy boli vymazané.');
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportJSON() {
+  const blob = new Blob([JSON.stringify({ entries, customTypes }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cephalolog-export-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.entries) entries = data.entries;
+      if (data.customTypes) customTypes = data.customTypes;
+      saveData();
+      alert(`Import úspešný: ${entries.length} záznamov.`);
+      showPage('dashboard');
+    } catch(err) { alert('Chyba pri importe: ' + err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ============================================================
+// SAMPLE DATA (for demo)
+// ============================================================
+function generateSampleData() {
+  if (entries.length > 0) return;
+  const types = BASE_TYPES;
+  const zoneIds = ZONES.map(z=>z.id);
+  const now = Date.now();
+  for (let i = 0; i < 35; i++) {
+    const daysAgo = Math.floor(Math.random() * 90);
+    const hour = Math.floor(Math.random() * 24);
+    const date = new Date(now - daysAgo * 86400000);
+    date.setHours(hour, Math.floor(Math.random()*60));
+    const intensity = Math.floor(Math.random() * 9) + 1;
+    const numTypes = Math.floor(Math.random() * 2) + 1;
+    const selectedTypes = [];
+    for (let j = 0; j < numTypes; j++) {
+      const t = types[Math.floor(Math.random()*types.length)];
+      if (!selectedTypes.includes(t)) selectedTypes.push(t);
+    }
+    const numZones = Math.floor(Math.random() * 3) + 1;
+    const selectedZones = [];
+    for (let j = 0; j < numZones; j++) {
+      const z = zoneIds[Math.floor(Math.random()*zoneIds.length)];
+      if (!selectedZones.includes(z)) selectedZones.push(z);
+    }
+    const triggers = ['stres', 'málo spánku', 'počasie', 'alkohol', 'hluk', 'obrazovka', ''];
+    entries.push({
+      id: (now - i * 100000).toString(),
+      datetime: date.toISOString(),
+      intensity,
+      duration: [30,60,90,120,180,240,360,480][Math.floor(Math.random()*8)],
+      types: selectedTypes,
+      zones: selectedZones,
+      trigger: triggers[Math.floor(Math.random()*triggers.length)],
+      notes: ''
+    });
+  }
+  entries.sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+  saveData();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+// ============================================================
+// HEAD MAP PICKER
+// ============================================================
+let pickerView = 'front';
+let pickerSelectedZones = [];
+let hpmCurrentStep = 1;
+
+function openHeadPicker() {
+  // Pre-populate from existing form zone chips
+  pickerSelectedZones = [...document.querySelectorAll('#zone-chips-form .zone-chip.selected')].map(c => c.dataset.id);
+  hpmCurrentStep = 1;
+  document.getElementById('head-picker-modal').classList.add('open');
+  pickerView = 'front';
+  switchHeadView(document.getElementById('vtab-front'), 'front');
+  renderPickerZonesPreview();
+  hpmRenderSteps();
+}
+function closeHeadPicker() {
+  document.getElementById('head-picker-modal').classList.remove('open');
+}
+
+function hpmGoStep(n) {
+  hpmCurrentStep = n;
+  [1,2,3].forEach(i => {
+    document.getElementById('hpm-panel'+i).style.display = i===n ? '' : 'none';
+  });
+  hpmRenderSteps();
+  if (n===2) hpmRenderTypeChips();
+  if (n===3) hpmRenderSummary();
+}
+
+function hpmRenderSteps() {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('hpm-step'+i);
+    el.classList.remove('active','done');
+    if (i < hpmCurrentStep) el.classList.add('done');
+    else if (i === hpmCurrentStep) el.classList.add('active');
+  });
+}
+
+function switchHeadView(tab, view) {
+  pickerView = view;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  if (tab) tab.classList.add('active');
+  drawPickerHead();
+}
+
+function pickerSelectWhole() {
+  const idx = pickerSelectedZones.indexOf('whole');
+  if (idx >= 0) {
+    pickerSelectedZones.splice(idx,1);
+  } else {
+    pickerSelectedZones = ['whole'];
+  }
+  drawPickerHead();
+  renderPickerZonesPreview();
+  syncVtabWhole();
+}
+
+function syncVtabWhole() {
+  const t = document.getElementById('vtab-whole');
+  if (pickerSelectedZones.includes('whole')) {
+    t.classList.add('active');
+  } else {
+    t.classList.remove('active');
+  }
+}
+
+function drawPickerHead() {
+  const svg = document.getElementById('picker-head-svg');
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+
+  function e(tag, attrs) {
+    const el = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+    return el;
+  }
+
+  const headFill = '#1a2030';
+  const stroke = '#3a4565';
+  const isFront = pickerView === 'front';
+
+  // Head outline
+  svg.appendChild(e('ellipse', { cx:100, cy:112, rx:72, ry:87, fill:headFill, stroke, 'stroke-width':'1.5' }));
+  svg.appendChild(e('rect', { x:82, y:190, width:36, height:42, rx:8, fill:headFill, stroke, 'stroke-width':'1.5' }));
+  svg.appendChild(e('path', { d:'M 52 230 Q 100 245 148 230', fill:'none', stroke, 'stroke-width':'1.5' }));
+  // Ears
+  svg.appendChild(e('ellipse', { cx:26, cy:117, rx:9, ry:15, fill:headFill, stroke, 'stroke-width':'1' }));
+  svg.appendChild(e('ellipse', { cx:174, cy:117, rx:9, ry:15, fill:headFill, stroke, 'stroke-width':'1' }));
+
+  // Highlight for whole head if selected
+  if (pickerSelectedZones.includes('whole')) {
+    const wh = e('ellipse', { cx:100, cy:112, rx:70, ry:85, fill:'#9ba3b833', stroke:'#9ba3b8', 'stroke-width':'2', 'stroke-dasharray':'5,3' });
+    svg.appendChild(wh);
+  }
+
+  const zoneShapes = [];
+
+  if (isFront) {
+    // Forehead
+    zoneShapes.push({ id:'forehead', shape:'ellipse', attrs:{ cx:100, cy:60, rx:54, ry:32 } });
+    // Temples
+    zoneShapes.push({ id:'temple_l', shape:'ellipse', attrs:{ cx:38, cy:100, rx:23, ry:30 } });
+    zoneShapes.push({ id:'temple_r', shape:'ellipse', attrs:{ cx:162, cy:100, rx:23, ry:30 } });
+    // Eyes
+    zoneShapes.push({ id:'eye_l', shape:'ellipse', attrs:{ cx:75, cy:118, rx:21, ry:14 } });
+    zoneShapes.push({ id:'eye_r', shape:'ellipse', attrs:{ cx:125, cy:118, rx:21, ry:14 } });
+    // Sinus
+    zoneShapes.push({ id:'sinus', shape:'ellipse', attrs:{ cx:100, cy:143, rx:16, ry:21 } });
+    // Jaw
+    zoneShapes.push({ id:'jaw_l', shape:'ellipse', attrs:{ cx:67, cy:174, rx:23, ry:16 } });
+    zoneShapes.push({ id:'jaw_r', shape:'ellipse', attrs:{ cx:133, cy:174, rx:23, ry:16 } });
+  } else {
+    // Crown
+    zoneShapes.push({ id:'crown', shape:'ellipse', attrs:{ cx:100, cy:48, rx:57, ry:40 } });
+    // Occiput
+    zoneShapes.push({ id:'occiput', shape:'ellipse', attrs:{ cx:100, cy:132, rx:57, ry:50 } });
+    // Neck
+    zoneShapes.push({ id:'neck_l', shape:'ellipse', attrs:{ cx:74, cy:198, rx:19, ry:21 } });
+    zoneShapes.push({ id:'neck_r', shape:'ellipse', attrs:{ cx:126, cy:198, rx:19, ry:21 } });
+  }
+
+  zoneShapes.forEach(({ id, shape, attrs }) => {
+    const zone = ZONES.find(z => z.id === id);
+    if (!zone) return;
+    const isSel = pickerSelectedZones.includes(id);
+
+    const fill = isSel ? zone.color + '55' : zone.color + '20';
+    const strokeC = zone.color;
+    const sw = isSel ? '2.5' : '1';
+
+    const el = e(shape, { ...attrs, fill, stroke: strokeC, 'stroke-width': sw, 'class': 'mapzone' + (isSel ? ' sel' : '') });
+    el.style.cursor = 'pointer';
+
+    // Add hover glow
+    el.addEventListener('mouseenter', function() {
+      if (!isSel) this.setAttribute('fill', zone.color + '40');
+    });
+    el.addEventListener('mouseleave', function() {
+      if (!pickerSelectedZones.includes(id)) this.setAttribute('fill', zone.color + '20');
+    });
+
+    el.addEventListener('click', () => {
+      const idx2 = pickerSelectedZones.indexOf(id);
+      // If whole is selected, deselect it first
+      const wi = pickerSelectedZones.indexOf('whole');
+      if (wi >= 0) pickerSelectedZones.splice(wi,1);
+      if (idx2 >= 0) pickerSelectedZones.splice(idx2,1);
+      else pickerSelectedZones.push(id);
+      drawPickerHead();
+      renderPickerZonesPreview();
+      syncVtabWhole();
+    });
+
+    // Label
+    const cx = parseFloat(attrs.cx);
+    const cy = parseFloat(attrs.cy);
+    const lbl = e('text', { x: cx, y: cy, 'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill: isSel ? '#fff' : '#ffffffaa', 'font-size':'7.5', 'font-weight': isSel?'600':'400',
+      'pointer-events':'none' });
+    lbl.textContent = zone.label;
+
+    svg.appendChild(el);
+    svg.appendChild(lbl);
+  });
+}
+
+function renderPickerZonesPreview() {
+  const el = document.getElementById('picker-zones-preview');
+  if (pickerSelectedZones.length === 0) {
+    el.innerHTML = '<span style="font-size:12px;color:var(--text3)">Žiadna zóna nevybraná</span>';
+    return;
+  }
+  el.innerHTML = pickerSelectedZones.map(id => {
+    const z = ZONES.find(z2 => z2.id === id);
+    if (!z) return '';
+    return `<span class="sel-zone-tag" style="background:${z.color}22;border:1px solid ${z.color}55;color:${z.color}" onclick="pickerRemoveZone('${id}')">
+      ${z.label} <span style="opacity:0.6">✕</span>
+    </span>`;
+  }).join('');
+}
+
+function pickerRemoveZone(id) {
+  pickerSelectedZones = pickerSelectedZones.filter(z => z !== id);
+  drawPickerHead();
+  renderPickerZonesPreview();
+  syncVtabWhole();
+}
+
+// HPM Step 2: type chips
+let hpmSelectedTypes = [];
+function hpmRenderTypeChips() {
+  // Pre-populate from main form
+  const existingSelected = [...document.querySelectorAll('#type-chips .chip.selected')].map(c => c.textContent);
+  if (hpmSelectedTypes.length === 0 && existingSelected.length > 0) hpmSelectedTypes = [...existingSelected];
+
+  const tc = document.getElementById('hpm-type-chips');
+  tc.innerHTML = '';
+  getAllTypes().forEach(t => {
+    const ch = document.createElement('div');
+    ch.className = 'chip' + (hpmSelectedTypes.includes(t) ? ' selected' : '');
+    ch.textContent = t;
+    ch.onclick = () => {
+      ch.classList.toggle('selected');
+      if (ch.classList.contains('selected')) {
+        if (!hpmSelectedTypes.includes(t)) hpmSelectedTypes.push(t);
+      } else {
+        hpmSelectedTypes = hpmSelectedTypes.filter(x => x !== t);
+      }
+    };
+    tc.appendChild(ch);
+  });
+}
+
+function hpmUpdateBadge(v) {
+  v = parseInt(v);
+  document.getElementById('hpm-intensity-val').textContent = v;
+  const badge = document.getElementById('hpm-intensity-badge');
+  badge.textContent = v;
+  const colors = ['','#4db87a','#4db87a','#7bc96f','#d4b84a','#d4b84a','#e08a3a','#e08a3a','#e05555','#e05555','#cc2222'];
+  badge.style.background = (colors[v] || '#7c6fcd') + '33';
+  badge.style.color = colors[v] || '#7c6fcd';
+}
+
+function hpmRenderSummary() {
+  const zoneLabels = pickerSelectedZones.map(id => ZONES.find(z=>z.id===id)?.label || id);
+  const intensity = document.getElementById('hpm-intensity').value;
+  const types = [...document.querySelectorAll('#hpm-type-chips .chip.selected')].map(c=>c.textContent);
+
+  let html = '';
+  if (zoneLabels.length) html += `<div><span style="color:var(--text3);font-size:11px">Zóny:</span> ${zoneLabels.join(', ')}</div>`;
+  if (types.length) html += `<div style="margin-top:4px"><span style="color:var(--text3);font-size:11px">Typy:</span> ${types.join(', ')}</div>`;
+  html += `<div style="margin-top:4px"><span style="color:var(--text3);font-size:11px">Intenzita:</span> <strong>${intensity}/10</strong></div>`;
+  document.getElementById('hpm-summary').innerHTML = html;
+
+  hpmUpdateBadge(intensity);
+}
+
+function hpmConfirm() {
+  // Transfer zones to main form chips
+  document.querySelectorAll('#zone-chips-form .zone-chip').forEach(ch => {
+    const id = ch.dataset.id;
+    const isSel = pickerSelectedZones.includes(id);
+    const z = ZONES.find(z2=>z2.id===id);
+    if (!z) return;
+    ch.classList.toggle('selected', isSel);
+    if (isSel) {
+      ch.style.backgroundColor = z.color + '33';
+      ch.style.borderColor = z.color;
+      ch.style.color = z.color;
+    } else {
+      ch.style.backgroundColor = '';
+      ch.style.borderColor = '';
+      ch.style.color = '';
+    }
+  });
+
+  // Transfer types to main form
+  const types = [...document.querySelectorAll('#hpm-type-chips .chip.selected')].map(c=>c.textContent);
+  document.querySelectorAll('#type-chips .chip').forEach(ch => {
+    const isSel = types.includes(ch.textContent);
+    ch.classList.toggle('selected', isSel);
+  });
+
+  // Transfer intensity
+  const iv = document.getElementById('hpm-intensity').value;
+  document.getElementById('f-intensity').value = iv;
+  updateIntensityBadge(iv);
+
+  closeHeadPicker();
+}
+
+
+loadData();
+generateSampleData();
+renderDashboard();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      console.log('SW registered', reg);
+    }).catch(err => console.log('SW error', err));
+  });
+}
+</script>
+</body>
+</html>

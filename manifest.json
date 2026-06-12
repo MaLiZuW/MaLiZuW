@@ -1,0 +1,28 @@
+{
+  "name": "CephaloLog – Sledovanie bolesti hlavy",
+  "short_name": "CephaloLog",
+  "description": "Osobný denník bolesti hlavy s mapou, štatistikami a Pareto analýzou",
+  "start_url": "./headache-tracker.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "lang": "sk",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "lifestyle"],
+  "screenshots": []
+}
